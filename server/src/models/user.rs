@@ -35,6 +35,14 @@ pub struct AddCharacterRequest {
     pub stats: Stats,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct UpdateCharacterRequest {
+    pub username: String,
+    pub secret: String,
+    pub name: Option<String>, // Not required to update name
+    pub stats: Option<Stats>, // Not required to update stats
+}
+
 impl User {
     pub fn add_character(mut self, req: AddCharacterRequest) -> Self {
         let new_char = Character {
@@ -45,5 +53,13 @@ impl User {
         };
         self.characters.push(new_char);
         self
+    }
+
+    pub fn update_character(mut self, char_id: Uuid, req: UpdateCharacterRequest) -> Option<Self> {
+        let char = self.characters.iter_mut().find(
+            |c| c.id == char_id)?;
+        if let Some(name) = req.name { char.name = name;}
+        if let Some(stats) = req.stats { char.stats = stats;}
+        Some(self)
     }
 }
