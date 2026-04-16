@@ -1,0 +1,48 @@
+# MongoDB + backend server — start with: docker compose -f docker-compose.backend.yml up
+# Ports and credentials are read from server/.env
+env_file:
+  - ./server/.env
+
+services:
+  mongo:
+    image: docker.io/library/mongo:latest
+    container_name: local-mongo
+    restart: unless-stopped
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    env_file:
+      - ./server/.env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-Password4321!}
+      MONGO_INITDB_DATABASE: ${MONGODB_DB_NAME:-cloud_app_dev_db}
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - app
+
+  server:
+    build:
+      context: ./server
+    container_name: local-server
+    restart: unless-stopped
+    ports:
+      - "${PORT:-5000}:${PORT:-5000}"
+    env_file:
+      - ./server/.env
+    environment:
+      # Override MONGODB_URI so the server reaches the mongo container by its service name,
+      # not localhost (which would be the server container's own loopback).
+      MONGODB_URI: "mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-Password4321!}@mongo:27017"
+    depends_on:
+      - mongo
+    networks:
+      - app
+
+networks:
+  app:
+    name: finalproj-network
+
+volumes:
+  mongo-data:
+    name: finalproj-mongo-data
