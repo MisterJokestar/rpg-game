@@ -20,13 +20,13 @@
       in
       {
         devShells.default = pkgs.mkShell {
+          name = "cloud-game";
           buildInputs = [
             # Rust
             rustToolchain
 
-            # Node.js for frontend
+            # Node.js for frontend (npm is bundled with nodejs)
             pkgs.nodejs_22
-            pkgs.nodePackages.npm
 
             # Useful extras
             pkgs.pkg-config
