@@ -1,6 +1,6 @@
 //! character.rs
 //!
-//! Routes for character management.
+//! Route handlers for character management.
 //! Allows users to create and update characters.
 
 use axum::{extract::{Path, State}, http::StatusCode, Json};

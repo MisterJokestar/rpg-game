@@ -8,6 +8,8 @@ use crate::routes::character::{create_character, update_character};
 
 mod items;
 mod character;
+mod state;
+mod game;
 
 pub fn create_router(state: Arc<AppState>) -> Router {
     Router::new()
