@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::enemys::EnemyType;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Game {
     #[serde(rename = "_id")]
@@ -27,5 +29,43 @@ pub struct PlayerState {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnemyState {
     pub health: (i32, i32),
-    pub enemy_type: String, // Probably make into a enum later.
+    pub enemy_type: EnemyType,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct NewGameRequest {
+    player_id: Uuid,
+    character_id: Uuid,
+    max_health: i32,
+}
+
+impl Game {
+    pub fn new(req: NewGameRequest) -> Self {
+        Game {
+    		id: Uuid::new_v4(),
+    		complete: false,
+    		win: None,
+    		round: 1,
+    		player_state: PlayerState {
+    			player_id: Uuid::new_v4(),
+    			character_id: Uuid::new_v4(),
+    			health: (req.max_health, req.max_health),
+    			damage_taken: 0,
+    			damage_healed: 0,
+    			damage_blocked: 0,
+    			damage_dodged: 0,
+    			damage_dealt: 0,
+            },
+    		enemy_state: EnemyState::new(),
+        }
+    }
+}
+
+impl EnemyState {
+    fn new() -> Self {
+        EnemyState { 
+            health: (100, 100),
+            enemy_type: EnemyType::Dummy,
+        }
+    }
 }

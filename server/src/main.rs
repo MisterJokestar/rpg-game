@@ -7,6 +7,7 @@ mod middleware;
 mod models;
 mod routes;
 mod state;
+mod enemys;
 
 use config::{Config, DatabaseBackend};
 use db::{UserRepository, GameRepository};
