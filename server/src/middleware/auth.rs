@@ -17,7 +17,7 @@ pub async fn auth_middleware(
         .headers()
         .get("Authorization")
         .and_then(|v| v.to_str().ok())
-        .ok_or_else(|| AppError::Unauthorized)?;
+        .ok_or(AppError::Unauthorized)?;
     // parse auth <username>:<secret>
     let mut parts = auth.splitn(2, ":");
     let username: &str = parts.next().ok_or(AppError::Unauthorized)?;
