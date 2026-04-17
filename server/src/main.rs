@@ -8,6 +8,7 @@ mod models;
 mod routes;
 mod state;
 mod enemys;
+mod game;
 
 use config::{Config, DatabaseBackend};
 use db::{UserRepository, GameRepository};

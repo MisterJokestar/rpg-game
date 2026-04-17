@@ -1,4 +1,7 @@
-use crate::enemys::{Enemy, EnemyType};
+use crate::{
+    models::Action,
+    enemys::{Enemy, EnemyType}
+};
 
 // Dummy enemy is a stand in enemy, 
 // on its action it will do nothing.
@@ -27,7 +30,7 @@ impl Enemy for DummyEnemy {
     }
 
     // This will change.
-    fn choose_action(&self) -> bool {
-        false
+    fn choose_action(&self) -> Action {
+        Action::None
     }
 }

@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::enemys::dummy::DummyEnemy;
+use crate::{
+    models::Action,
+    enemys::dummy::DummyEnemy,
+};
 
 pub mod dummy;
 
@@ -12,7 +15,7 @@ pub enum EnemyType {
 pub trait Enemy {
     fn get_type(&self) -> EnemyType;
     fn get_max_health(&self) -> i32;
-    fn choose_action(&self) -> bool; // TODO: should be an action returned, no action struct though.
+    fn choose_action(&self) -> Action;
 }
 
 pub fn get_enemy_by_type(enemy_type: EnemyType) -> Option<Box<dyn Enemy>> {
