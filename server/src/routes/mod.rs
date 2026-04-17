@@ -18,6 +18,6 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         // .route("/items/:id", get(get_item).put(update_item).delete(delete_item))
         .route("/characters", post(create_character))
         .route("/characters/:id", put(update_character))
-        .layer(middleware::from_fn(auth_middleware))
+        .layer(middleware::from_fn_with_state(state.clone(), auth_middleware))
         .with_state(state)
 }
