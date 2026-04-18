@@ -32,7 +32,7 @@ use crate::AppState;
 //
 // SSE Endpoint
 // This is to register the client as a listener for game updates
-async fn game_stream(
+pub async fn game_stream(
     State(state): State<Arc<AppState>>,
     Path(user_id): Path<Uuid>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {

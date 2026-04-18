@@ -19,6 +19,7 @@ pub struct PlayerState {
     pub player_id: Uuid,
     pub character_id: Uuid,
     pub health: (i32, i32),
+    pub block: i32,
     pub damage_taken: i32,
     pub damage_healed: i32,
     pub damage_blocked: i32,
@@ -29,6 +30,7 @@ pub struct PlayerState {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnemyState {
     pub health: (i32, i32),
+    pub block: i32,
     pub enemy_type: EnemyType,
 }
 
@@ -57,6 +59,7 @@ impl Game {
     			player_id: Uuid::new_v4(),
     			character_id: Uuid::new_v4(),
     			health: (req.max_health, req.max_health),
+                block: 0,
     			damage_taken: 0,
     			damage_healed: 0,
     			damage_blocked: 0,
@@ -72,6 +75,7 @@ impl EnemyState {
     fn new() -> Self {
         EnemyState { 
             health: (100, 100),
+            block: 0,
             enemy_type: EnemyType::Dummy,
         }
     }
