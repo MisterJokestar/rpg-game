@@ -89,9 +89,9 @@ pub enum GameEvent {
 
 #[derive(Debug, Deserialize)]
 pub struct NewGameRequest {
-    player_id: Uuid,
-    character_id: Uuid,
-    max_health: i32,
+    pub player_id: Uuid,
+    pub character_id: Uuid,
+    pub max_health: i32,
 }
 
 impl Game {

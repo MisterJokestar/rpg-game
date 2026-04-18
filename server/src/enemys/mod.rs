@@ -12,7 +12,7 @@ pub enum EnemyType {
     Dummy,
 }
 
-pub trait Enemy {
+pub trait Enemy: Send + Sync {
     fn get_type(&self) -> EnemyType;
     fn get_max_health(&self) -> i32;
     fn next_turn(&self) -> i32;

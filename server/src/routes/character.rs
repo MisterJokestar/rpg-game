@@ -12,7 +12,7 @@ use crate::{
     state::AppState,
 };
 
-// Handler for POST: creates a new character and adds it to the users account
+// POST /characters — creates a new character and adds it to the users account
 pub async fn create_character(
     State(state): State<Arc<AppState>>,
     Json(body): Json<AddCharacterRequest>,
@@ -20,9 +20,6 @@ pub async fn create_character(
     // Find the user by username from the DB, returns 401 if not found
     let user = state.users.get_user_by_username(&body.username).await?
         .ok_or_else(|| AppError::NotFound(format!("Username '{}' not found", &body.username)))?;
-
-    // Validate the secret matches, if not, return 404
-    if user.secret != body.secret { return Err(AppError::Unauthorized);}
     // Call add_character handler and pass JSON body to create the new character
     let updated = user.add_character(body);
     // Making copy of the new character
@@ -33,7 +30,7 @@ pub async fn create_character(
 
 }
 
-// Handler for PUT: update an existing character in the users account
+// PUT /characters/:id — update an existing character in the users account
 pub async fn update_character(
     State(state): State<Arc<AppState>>,
     Path(character_id): Path<Uuid>,
@@ -42,8 +39,6 @@ pub async fn update_character(
     // Find the user by username from the DB, returns a 401 if not found
     let user = state.users.get_user_by_username(&body.username).await?
         .ok_or_else(|| AppError::NotFound(format!("Username '{}' not found", &body.username)))?;
-    // Validate the secret matches, if not, return 404
-    if user.secret != body.secret { return Err(AppError::Unauthorized);}
     // Apply updates to the character, returns a 404 if character_id is not found
     let updated = user.update_character(character_id, body)
         .ok_or_else(||AppError::NotFound(format!("Character '{}' not found", character_id)))?;
