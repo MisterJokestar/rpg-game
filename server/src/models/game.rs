@@ -32,6 +32,13 @@ pub struct EnemyState {
     pub enemy_type: EnemyType,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub enum GameEvent {
+    TurnResolved(Game),
+    GameOver(Game),
+    GameStopped,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct NewGameRequest {
     player_id: Uuid,

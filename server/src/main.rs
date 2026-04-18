@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 mod config;
@@ -14,6 +15,10 @@ use config::{Config, DatabaseBackend};
 use db::{UserRepository, GameRepository};
 use db::{firestore::FirestoreRepository, mongodb::MongoRepository};
 use state::AppState;
+use tokio::sync::RwLock;
+use uuid::Uuid;
+
+use crate::state::GameSession;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -45,7 +50,9 @@ async fn main() -> anyhow::Result<()> {
             }
         };
 
-    let state = Arc::new(AppState { users, games });
+    let sessions: RwLock<HashMap<Uuid, GameSession>> = RwLock::new(HashMap::new());
+
+    let state = Arc::new(AppState { users, games, sessions });
     let app = routes::create_router(state);
 
     let addr = format!("{}:{}", config.host, config.port);
