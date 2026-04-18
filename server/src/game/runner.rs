@@ -11,7 +11,7 @@ use crate::{
         get_enemy_by_type}, 
     models::{
         Action,
-        game::{Game, GameEvent},
+        game::{Combatant, Game, GameEvent},
         user::Character
     }
 };
@@ -37,6 +37,7 @@ impl Runner {
         let (event_tx, _) = broadcast::channel(16);
         let enemy = match get_enemy_by_type(game_state.enemy_state.enemy_type) {
             Some(e) => e,
+            // defaults to dummy TODO: error handling.
             None => Box::new(DummyEnemy::new()),
         };
         Runner {
@@ -52,6 +53,7 @@ impl Runner {
     }
 
     pub async fn cleanup(&mut self) {
+        self.event_tx.send(GameEvent::GameStopped(self.game_state.clone()));
         if let Err(e) = self.games.update_game(
             self.game_state.clone()
         ).await {
@@ -65,12 +67,11 @@ impl Runner {
                 break;
             }
             // iterate through turn
-            let (players_turn, current_turn) = handle_turn_order(
+            let players_turn = handle_turn_order(
                 &mut self.game_state,
                 self.character.stats.speed,
                 &self.enemy,
             );
-            self.game_state.turn = current_turn;
             // check if enemy's turn or players turn
             if players_turn {
                 let player_action = tokio::select! {
@@ -78,24 +79,24 @@ impl Runner {
                         Some(action) => action,
                         None => break, // Sender dropped.
                     },
+                    // watcher canceled runner.
                     _ = self.cancel.cancelled() => break,
                 };
+                handle_turn(player_action, &mut self.game_state.player_state, &mut self.game_state.enemy_state);
             } else {
                 // Enemy's Turn
                 let enemys_action = self.enemy.choose_action();
+                handle_turn(enemys_action, &mut self.game_state.enemy_state, &mut self.game_state.player_state);
             }
-            // update self.game_state
             // broadcast via event_tx
-            // self.event_tx.send(GameEvent::TurnResolved(self.game_state.clone()))
+            self.event_tx.send(GameEvent::TurnResolved(self.game_state.clone()));
         } // End of game loop.
-
         self.cleanup().await;
     }
 }
 
 // on true, player is next, on false, enemy is next.
-// also returns current turn.
-fn handle_turn_order(game: &mut Game, character_speed: i32, enemy: &Box<dyn Enemy>) -> (bool, i32) {
+fn handle_turn_order(game: &mut Game, character_speed: i32, enemy: &Box<dyn Enemy>) -> bool {
     let current_turn = game.turn;
     let players_next_turn = match game.player_state.next_turn {
         Some(turn) => turn,
@@ -107,10 +108,43 @@ fn handle_turn_order(game: &mut Game, character_speed: i32, enemy: &Box<dyn Enem
     };
     if players_next_turn <= enemy_next_turn {
             game.player_state.next_turn = Some(players_next_turn + character_speed);
-            return (true, players_next_turn)
+            game.turn = players_next_turn;
+            return true
     }
     game.enemy_state.next_turn = Some(enemy_next_turn + enemy.next_turn());
-    ( false, enemy_next_turn )
+    game.turn = enemy_next_turn;
+    false
+}
+
+fn handle_turn(
+    action: Action, 
+    attacker: &mut impl Combatant, 
+    defender: &mut impl Combatant
+) {
+    attacker.set_block(0);
+    match action {
+        Action::Attack(dmg) => {
+            let defender_block = defender.get_block();
+            let attack_dmg = dmg - defender_block;
+            if attack_dmg > 0 {
+                defender.set_block(0);
+                let (total_hp, mut defender_hp) = defender.get_health();
+                defender_hp = defender_hp - attack_dmg;
+                defender.set_health((total_hp, if defender_hp > 0 {defender_hp} else {0}));
+            } else {
+                defender.set_block(-1 * attack_dmg);
+            }
+        },
+        Action::Defend(block) => {
+            attacker.set_block(block);
+        },
+        Action::Heal(heal) => {
+            let (total_hp, mut attacker_hp) = attacker.get_health();
+            attacker_hp = attacker_hp + heal;
+            attacker.set_health((total_hp, if attacker_hp > total_hp {total_hp} else {attacker_hp}));
+        },
+        Action::None => return
+    }
 }
 
 // TODO: Checklist
@@ -124,5 +158,11 @@ fn handle_turn_order(game: &mut Game, character_speed: i32, enemy: &Box<dyn Enem
 //      Attack -> subtract opponents block from attack dmg, apply dmg to health.
 //      Defend -> set block to number provided.
 //      heal -> heals the specified number.
+//      DONE !
 //
 // 3. Broadcast state back to client.
+//      Done in cleanup and at end of turn 
+//
+// 4. Handling new rounds?
+//
+// 5. What is the end of a game?

@@ -37,11 +37,54 @@ pub struct EnemyState {
     pub enemy_type: EnemyType,
 }
 
+pub trait Combatant {
+    fn get_block(&self) -> i32;
+    fn set_block(&mut self, new_block: i32);
+    fn get_health(&self) -> (i32, i32);
+    fn set_health(&mut self, new_health: (i32, i32));
+}
+
+impl Combatant for PlayerState {
+    fn get_block(&self) -> i32 {
+        self.block
+    }
+
+    fn set_block(&mut self, new_block: i32) {
+        self.block = new_block;
+    }
+
+    fn get_health(&self) -> (i32, i32) {
+        self.health
+    }
+
+    fn set_health(&mut self, new_health: (i32, i32)) {
+        self.health = new_health;
+    }
+}
+
+impl Combatant for EnemyState {
+    fn get_block(&self) -> i32 {
+        self.block
+    }
+
+    fn set_block(&mut self, new_block: i32) {
+        self.block = new_block;
+    }
+
+    fn get_health(&self) -> (i32, i32) {
+        self.health
+    }
+
+    fn set_health(&mut self, new_health: (i32, i32)) {
+        self.health = new_health;
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub enum GameEvent {
     TurnResolved(Game),
     GameOver(Game),
-    GameStopped,
+    GameStopped(Game),
 }
 
 #[derive(Debug, Deserialize)]
