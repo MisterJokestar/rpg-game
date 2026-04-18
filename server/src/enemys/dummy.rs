@@ -29,6 +29,10 @@ impl Enemy for DummyEnemy {
         self.max_health
     }
 
+    fn next_turn(&self) -> i32 {
+        return 100
+    }
+
     // This will change.
     fn choose_action(&self) -> Action {
         Action::None

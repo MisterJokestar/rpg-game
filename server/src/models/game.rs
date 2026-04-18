@@ -10,6 +10,7 @@ pub struct Game {
     pub complete: bool,
     pub win: Option<bool>,
     pub round: i32,
+    pub turn: i32,
     pub player_state: PlayerState,
     pub enemy_state: EnemyState,
 }
@@ -18,6 +19,7 @@ pub struct Game {
 pub struct PlayerState {
     pub player_id: Uuid,
     pub character_id: Uuid,
+    pub next_turn: Option<i32>,
     pub health: (i32, i32),
     pub block: i32,
     pub damage_taken: i32,
@@ -29,6 +31,7 @@ pub struct PlayerState {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnemyState {
+    pub next_turn: Option<i32>,
     pub health: (i32, i32),
     pub block: i32,
     pub enemy_type: EnemyType,
@@ -55,9 +58,11 @@ impl Game {
     		complete: false,
     		win: None,
     		round: 1,
+            turn: 0,
     		player_state: PlayerState {
     			player_id: Uuid::new_v4(),
     			character_id: Uuid::new_v4(),
+                next_turn: None,
     			health: (req.max_health, req.max_health),
                 block: 0,
     			damage_taken: 0,
@@ -73,7 +78,8 @@ impl Game {
 
 impl EnemyState {
     fn new() -> Self {
-        EnemyState { 
+        EnemyState {
+            next_turn: None,
             health: (100, 100),
             block: 0,
             enemy_type: EnemyType::Dummy,

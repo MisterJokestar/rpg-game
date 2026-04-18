@@ -15,6 +15,7 @@ pub enum EnemyType {
 pub trait Enemy {
     fn get_type(&self) -> EnemyType;
     fn get_max_health(&self) -> i32;
+    fn next_turn(&self) -> i32;
     fn choose_action(&self) -> Action;
 }
 
