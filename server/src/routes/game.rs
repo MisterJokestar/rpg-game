@@ -104,11 +104,30 @@ pub async fn stop_game(
     Ok(StatusCode::NO_CONTENT)
 }
 
-// TODO: Send Action Plan
 // 1. grab session from state.sessions by user Uuid 
 // 2. session.watcher.ping.notify_one() (resets timer)
-// 3. send action with action_tx 
+// 3. send action with action_tx
 
+// POST /games/:user_id/actions — send a player action to the runner
+pub async fn send_action(
+    State(state): State<Arc<AppState>>,
+    Path(user_id): Path<Uuid>,
+    Json(action): Json<Action>,
+) -> Result<StatusCode, AppError> {
+    // Grab session from state.sessions by user Uuid
+    let (action_tx, ping) = {
+        let sessions = state.sessions.read().await;
+        let session = sessions.get(&user_id)
+        .ok_or_else(|| AppError::NotFound(format!("No active session for user '{}'", &user_id)))?;
+        (session.action_tx.clone(), session.watcher.ping.clone())
+    };
+    // Reset the watchers idle timer, game is still active
+    ping.notify_one();
+    // Send the action with action_tx
+    action_tx.send(action).await
+        .map_err(|err| AppError::Internal(format!("Failed to send action: {}", err)))?;
+    Ok(StatusCode::ACCEPTED)
+}
 
 // SSE Endpoint
 // This is to register the client as a listener for game updates
