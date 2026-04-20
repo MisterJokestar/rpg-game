@@ -30,7 +30,6 @@ pub struct Stats {
 #[derive(Debug, Deserialize)]
 pub struct AddCharacterRequest {
     pub username: String,
-    pub secret: String,
     pub name: String,
     pub stats: Stats,
 }
@@ -38,7 +37,6 @@ pub struct AddCharacterRequest {
 #[derive(Debug, Deserialize)]
 pub struct UpdateCharacterRequest {
     pub username: String,
-    pub secret: String,
     pub name: Option<String>, // Not required to update name
     pub stats: Option<Stats>, // Not required to update stats
 }

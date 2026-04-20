@@ -55,13 +55,17 @@ impl Combatant for PlayerState {
     }
 
     fn take_damage(&mut self, damage: i32) -> i32 {
+        // get damage after block
         let attack_dmg = damage - self.block;
+        // there is unblocked damage.
         if attack_dmg > 0 {
             self.damage_blocked += self.block;
             self.block = 0;
             let (total_hp, mut current_hp) = self.health;
-            current_hp = current_hp - attack_dmg;
-            let mut damage_taken;
+            // HP after unblocked damage applied.
+            current_hp -= attack_dmg;
+            let damage_taken;
+            // If HP is reduced to 0, excess damage not logged
             if current_hp <= 0 {
                 self.health = (total_hp, 0);
                 damage_taken = attack_dmg + current_hp;
@@ -69,21 +73,27 @@ impl Combatant for PlayerState {
                 self.health = (total_hp, current_hp);
                 damage_taken = attack_dmg;
             }
+            // Log damage taken.
             self.damage_taken += damage_taken;
-            return damage_taken
+            // returns damage taken.
+            damage_taken
         } else {
+            // All damage was blocked.
             self.damage_blocked = damage + attack_dmg;
-            self.block = (-1 * attack_dmg);
-            return 0;
+            // remaining block is kept.
+            self.block = -attack_dmg;
+            0
         }
     }
 
     fn deal_damage(&mut self, damage: i32) {
+        // just for logging purposes
         self.damage_dealt += damage;
     }
 
     fn heal_damage(&mut self, healing: i32) {
-        let (total_hp, mut current_hp) = self.health;
+        let (total_hp, current_hp) = self.health;
+        // Healing shouldn't overflow, caps at total_hp
         if healing + current_hp > total_hp {
             self.damage_healed += total_hp - current_hp;
             self.health = (total_hp, total_hp);
@@ -94,6 +104,7 @@ impl Combatant for PlayerState {
     }
 }
 
+// Same as impl for PlayerState, but without logging.
 impl Combatant for EnemyState {
     fn set_block(&mut self, block: i32) {
         self.block = block;
@@ -108,8 +119,8 @@ impl Combatant for EnemyState {
         if attack_dmg > 0 {
             self.block = 0;
             let (total_hp, mut current_hp) = self.health;
-            current_hp = current_hp - attack_dmg;
-            let mut damage_taken;
+            current_hp -= attack_dmg;
+            let damage_taken;
             if current_hp <= 0 {
                 self.health = (total_hp, 0);
                 damage_taken = attack_dmg + current_hp;
@@ -117,19 +128,19 @@ impl Combatant for EnemyState {
                 self.health = (total_hp, current_hp);
                 damage_taken = attack_dmg;
             }
-            return damage_taken
+            damage_taken
         } else {
-            self.block = (-1 * attack_dmg);
-            return 0;
+            self.block = -attack_dmg;
+            0
         }
     }
 
     fn deal_damage(&mut self, damage: i32) {
-        return
+        _ = damage;
     }
 
     fn heal_damage(&mut self, healing: i32) {
-        let (total_hp, mut current_hp) = self.health;
+        let (total_hp, current_hp) = self.health;
         if healing + current_hp > total_hp {
             self.health = (total_hp, total_hp);
         } else {

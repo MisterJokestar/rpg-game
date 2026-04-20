@@ -7,30 +7,26 @@ use crate::{
 // on its action it will do nothing.
 
 pub struct DummyEnemy {
-    enemy_type: EnemyType,
-    max_health: i32,
 }
 
 impl DummyEnemy {
     pub fn new() -> Self {
         DummyEnemy { 
-            enemy_type: EnemyType::Dummy, 
-            max_health: 100 
         }
     }
 }
 
 impl Enemy for DummyEnemy {
     fn get_type(&self) -> EnemyType {
-        self.enemy_type
+        EnemyType::Dummy
     }
 
     fn get_max_health(&self) -> i32 {
-        self.max_health
+        100
     }
 
     fn next_turn(&self) -> i32 {
-        return 100
+        100
     }
 
     // This will change.

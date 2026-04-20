@@ -1,5 +1,4 @@
 use std::sync::Arc;
-
 use tokio::sync::{mpsc, broadcast};
 use tokio_util::sync::CancellationToken;
 
@@ -7,7 +6,6 @@ use crate::{
     db::GameRepository, 
     enemys::{
         Enemy, 
-        dummy::DummyEnemy, 
         get_enemy_by_type}, 
     models::{
         Action,
@@ -16,6 +14,7 @@ use crate::{
     }
 };
 
+// Runner is used to run a game session
 pub struct Runner {
     character: Character,
     enemy: Box<dyn Enemy>,
@@ -28,18 +27,18 @@ pub struct Runner {
 }
 
 impl Runner {
+    // Sets up new runner
     pub fn new(
         character: Character,
         game_state: Game,
         games: Arc<dyn GameRepository>
     ) -> Self {
+        // Used to recieve player actions
         let (action_tx, action_rx) = mpsc::channel(1);
+        // Used to broadcast state updates (up to 16 clients can subscribe)
         let (event_tx, _) = broadcast::channel(16);
-        let enemy = match get_enemy_by_type(game_state.enemy_state.enemy_type) {
-            Some(e) => e,
-            // defaults to dummy TODO: error handling.
-            None => Box::new(DummyEnemy::new()),
-        };
+        // generates enemy off of type in game state.
+        let enemy = get_enemy_by_type(game_state.enemy_state.enemy_type);
         Runner {
             character,
             enemy,
@@ -52,8 +51,10 @@ impl Runner {
         }
     }
 
+    // On cleanup records game state to database.
     pub async fn cleanup(&mut self) {
-        self.event_tx.send(GameEvent::GameStopped(self.game_state.clone()));
+        // TODO: Error Handling
+        let _ = self.event_tx.send(GameEvent::GameStopped(self.game_state.clone()));
         if let Err(e) = self.games.update_game(
             self.game_state.clone()
         ).await {
@@ -88,8 +89,8 @@ impl Runner {
                 let enemys_action = self.enemy.choose_action();
                 handle_turn(enemys_action, &mut self.game_state.enemy_state, &mut self.game_state.player_state);
             }
-            // broadcast via event_tx
-            self.event_tx.send(GameEvent::TurnResolved(self.game_state.clone()));
+            // broadcast via event_tx TODO: Error Handling
+            let _ = self.event_tx.send(GameEvent::TurnResolved(self.game_state.clone()));
         } // End of game loop.
         self.cleanup().await;
     }
@@ -97,6 +98,7 @@ impl Runner {
 
 // on true, player is next, on false, enemy is next.
 fn handle_turn_order(game: &mut Game, character_speed: i32, enemy: &Box<dyn Enemy>) -> bool {
+    // Gets current turn, players next turn and enemys next turn.
     let current_turn = game.turn;
     let players_next_turn = match game.player_state.next_turn {
         Some(turn) => turn,
@@ -106,22 +108,27 @@ fn handle_turn_order(game: &mut Game, character_speed: i32, enemy: &Box<dyn Enem
         Some(turn) => turn,
         None => {current_turn + enemy.next_turn()},
     };
+    // Finds out whos turn is next.
     if players_next_turn <= enemy_next_turn {
-            game.player_state.next_turn = Some(players_next_turn + character_speed);
-            game.turn = players_next_turn;
-            return true
+        // players turn is next, update next_turn and current turn in state.
+        game.player_state.next_turn = Some(players_next_turn + character_speed);
+        game.turn = players_next_turn;
+        return true
     }
+    // Enemys turn, update nex_turn and current turn in state.
     game.enemy_state.next_turn = Some(enemy_next_turn + enemy.next_turn());
     game.turn = enemy_next_turn;
     false
 }
 
+// Will handle an action.
 fn handle_turn(
     action: Action, 
     attacker: &mut impl Combatant, 
     defender: &mut impl Combatant
 ) {
     attacker.reset_block();
+    // logic for handling each action held in Combatant class.
     match action {
         Action::Attack(dmg) => {
             let dealt_dmg = defender.take_damage(dmg);
@@ -133,7 +140,7 @@ fn handle_turn(
         Action::Heal(heal) => {
             attacker.heal_damage(heal);
         },
-        Action::None => return
+        Action::None => {}
     }
 }
 

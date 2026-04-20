@@ -5,8 +5,10 @@ use tokio::{
 };
 use tokio_util::sync::CancellationToken;
 
+// Timeout durration set for 15 minutes.
 const TIMEOUT_DURATION: Duration = Duration::from_secs(60 * 15);
 
+// Watcher is used to cancel a runner in case of timeout.
 #[derive(Clone)]
 pub struct Watcher {
     cancel_runner: CancellationToken,
@@ -15,6 +17,7 @@ pub struct Watcher {
 }
 
 impl Watcher {
+    // set up new watcher with cancel token for runner.
     pub fn new(
         cancel_runner:CancellationToken,
         ping: Arc<Notify>,
@@ -27,6 +30,7 @@ impl Watcher {
         }
     }
 
+    // Run timeout, listen for pings or early cancel.
     pub async fn run(&self) {
         loop {
             tokio::select! {

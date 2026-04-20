@@ -19,9 +19,8 @@ pub trait Enemy: Send + Sync {
     fn choose_action(&self) -> Action;
 }
 
-pub fn get_enemy_by_type(enemy_type: EnemyType) -> Option<Box<dyn Enemy>> {
+pub fn get_enemy_by_type(enemy_type: EnemyType) -> Box<dyn Enemy> {
     match enemy_type {
-        EnemyType::Dummy => Some(Box::new(DummyEnemy::new())),
-        _ => None
+        EnemyType::Dummy => Box::new(DummyEnemy::new()),
     }
 }
