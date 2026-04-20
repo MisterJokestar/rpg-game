@@ -12,7 +12,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [ (import rust-overlay) ];
-        pkgs = import nixpkgs { inherit system overlays; };
+        pkgs = import nixpkgs { inherit system overlays; config.allowUnfree = true; };
 
         rustToolchain = pkgs.rust-bin.stable.latest.default.override {
           extensions = [ "rust-src" "rust-analyzer" "clippy" "rustfmt" ];
@@ -31,6 +31,13 @@
             # Useful extras
             pkgs.pkg-config
             pkgs.openssl
+
+            # Terraform
+            pkgs.terraform
+
+            # Google Cloud
+            pkgs.google-cloud-sdk
+            pkgs.firebase-tools
           ];
 
           env = {
@@ -43,9 +50,6 @@
             echo "Rust $(rustc --version)"
             echo "Node $(node --version)"
             echo ""
-            echo "Start MongoDB:  cd server && podman-compose up -d"
-            echo "Run server:     cd server && cargo run"
-            echo "Run frontend:   cd frontend && npm install && npm run dev"
           '';
         };
       }
