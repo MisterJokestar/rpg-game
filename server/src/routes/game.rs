@@ -9,9 +9,9 @@ use axum::{
     response::sse::{Event, Sse},
     Json
 };
-use tokio_stream::{wrappers::BroadcastStream, StreamExt};
+use tokio_stream::{StreamExt, wrappers::{BroadcastStream, errors::BroadcastStreamRecvError}};
 use uuid::Uuid;
-use futures::Stream;
+use futures::{Stream, stream};
 use tokio::sync::Notify;
 use crate::{
     error::AppError,
@@ -57,6 +57,7 @@ pub async fn start_game(
     let action_tx = runner.action_tx.clone();
     let event_tx = runner.event_tx.clone();
     let cancel = runner.cancel.clone(); // watcher executes to stop runner
+    let snapshot = runner.snapshot.clone();
 
     // Create the watcher with cancel, ping, and stop
     let ping = Arc::new(Notify::new());
@@ -67,6 +68,7 @@ pub async fn start_game(
     let session = GameSession{
         action_tx,
         event_tx,
+        snapshot,
         watcher: watcher.clone(),
     };
 
@@ -134,19 +136,35 @@ pub async fn send_action(
 pub async fn game_stream(
     State(state): State<Arc<AppState>>,
     Path(user_id): Path<Uuid>,
-) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    let rx = {
+) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, AppError> {
+    // Subscribe first so no events are missed, then clone the snapshot Arc
+    let (rx, snapshot_arc) = {
         let sessions = state.sessions.read().await;
-        // TODO: Error handling for if user does not have a session running.
-        sessions.get(&user_id).unwrap().event_tx.subscribe()
-    }; // registers client to listen for updates
+        let session = sessions.get(&user_id)
+            .ok_or_else(|| AppError::NotFound(format!("No active session for user '{}'", &user_id)))?;
+        (session.event_tx.subscribe(), session.snapshot.clone())
+    };
 
-    let stream = BroadcastStream::new(rx).map(|event| {
-        // TODO: Error handling for Err(BroadcastStreamRecvError::Lagged)
-        // This happens if the reciever falls behind.
-        let data = serde_json::to_string(&event.unwrap()).unwrap();
-        Ok(Event::default().data(data))
+    // Read snapshot after releasing the sessions lock
+    let (snapshot_seq, snapshot_game) = snapshot_arc.read().await.clone();
+
+    // Send the current state immediately as the first event
+    let snapshot_event = stream::once(async move {
+        let data = serde_json::to_string(&snapshot_game).unwrap();
+        Ok(Event::default().event("snapshot").data(data))
     });
 
-    Sse::new(stream)
+    // Skip any buffered events already covered by the snapshot
+    let live_stream = BroadcastStream::new(rx).filter_map(move |event| match event {
+        Ok(e) if e.seq <= snapshot_seq => None,
+        Ok(e) => {
+            let data = serde_json::to_string(&e.event).unwrap();
+            Some(Ok(Event::default().data(data)))
+        }
+        Err(BroadcastStreamRecvError::Lagged(n)) => {
+            Some(Ok(Event::default().event("lag").data(n.to_string())))
+        }
+    });
+
+    Ok(Sse::new(snapshot_event.chain(live_stream)))
 }

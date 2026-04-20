@@ -5,9 +5,9 @@ use std::{
 use tokio::sync::{mpsc, RwLock, broadcast};
 use uuid::Uuid;
 use crate::{
-    db::{GameRepository, UserRepository}, 
-    game::watcher::Watcher, 
-    models::{Action, game::GameEvent},
+    db::{GameRepository, UserRepository},
+    game::watcher::Watcher,
+    models::{Action, game::{Game, SequencedEvent}},
 };
 
 /// Shared application state injected into every route handler via axum's
@@ -21,6 +21,7 @@ pub struct AppState {
 
 pub struct GameSession {
     pub action_tx: mpsc::Sender<Action>,
-    pub event_tx: broadcast::Sender<GameEvent>,
+    pub event_tx: broadcast::Sender<SequencedEvent>,
+    pub snapshot: Arc<RwLock<(u64, Game)>>,
     pub watcher: Watcher,
 }

@@ -1,15 +1,15 @@
 use std::sync::Arc;
-use tokio::sync::{mpsc, broadcast};
+use tokio::sync::{mpsc, broadcast, RwLock};
 use tokio_util::sync::CancellationToken;
 
 use crate::{
-    db::GameRepository, 
+    db::GameRepository,
     enemys::{
-        Enemy, 
-        get_enemy_by_type}, 
+        Enemy,
+        get_enemy_by_type},
     models::{
         Action,
-        game::{Combatant, Game, GameEvent},
+        game::{Combatant, Game, GameEvent, SequencedEvent},
         user::Character
     }
 };
@@ -21,8 +21,10 @@ pub struct Runner {
     game_state: Game,
     action_rx: mpsc::Receiver<Action>,
     pub action_tx: mpsc::Sender<Action>,
-    pub event_tx: broadcast::Sender<GameEvent>,
+    pub event_tx: broadcast::Sender<SequencedEvent>,
     pub cancel: CancellationToken,
+    pub snapshot: Arc<RwLock<(u64, Game)>>,
+    seq: u64,
     games: Arc<dyn GameRepository>,
 }
 
@@ -39,6 +41,7 @@ impl Runner {
         let (event_tx, _) = broadcast::channel(16);
         // generates enemy off of type in game state.
         let enemy = get_enemy_by_type(game_state.enemy_state.enemy_type);
+        let snapshot = Arc::new(RwLock::new((0u64, game_state.clone())));
         Runner {
             character,
             enemy,
@@ -47,6 +50,8 @@ impl Runner {
             action_tx,
             event_tx,
             cancel: CancellationToken::new(),
+            snapshot,
+            seq: 0,
             games
         }
     }
@@ -54,7 +59,10 @@ impl Runner {
     // On cleanup records game state to database.
     pub async fn cleanup(&mut self) {
         // TODO: Error Handling
-        let _ = self.event_tx.send(GameEvent::GameStopped(self.game_state.clone()));
+        self.seq += 1;
+        let seq = self.seq;
+        *self.snapshot.write().await = (seq, self.game_state.clone());
+        let _ = self.event_tx.send(SequencedEvent { seq, event: GameEvent::GameStopped(self.game_state.clone()) });
         if let Err(e) = self.games.update_game(
             self.game_state.clone()
         ).await {
@@ -90,7 +98,10 @@ impl Runner {
                 handle_turn(enemys_action, &mut self.game_state.enemy_state, &mut self.game_state.player_state);
             }
             // broadcast via event_tx TODO: Error Handling
-            let _ = self.event_tx.send(GameEvent::TurnResolved(self.game_state.clone()));
+            self.seq += 1;
+            let seq = self.seq;
+            *self.snapshot.write().await = (seq, self.game_state.clone());
+            let _ = self.event_tx.send(SequencedEvent { seq, event: GameEvent::TurnResolved(self.game_state.clone()) });
         } // End of game loop.
         self.cleanup().await;
     }

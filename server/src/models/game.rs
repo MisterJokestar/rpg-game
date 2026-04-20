@@ -156,6 +156,12 @@ pub enum GameEvent {
     GameStopped(Game),
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct SequencedEvent {
+    pub seq: u64,
+    pub event: GameEvent,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct NewGameRequest {
     pub player_id: Uuid,
