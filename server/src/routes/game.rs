@@ -34,6 +34,7 @@ use crate::{
 pub async fn start_game(
     State(state): State<Arc<AppState>>,
     Json(body): Json<NewGameRequest>,
+    // game_id: Option<Path<Uuid>>,
 ) -> Result<(StatusCode, Json<Game>), AppError> {
 
     // Copy player_id and character_id since Game takes ownership
@@ -47,6 +48,12 @@ pub async fn start_game(
         .find(|c| c.id == character_id)
         .cloned()
         .ok_or_else(|| AppError::NotFound(format!("Character '{}' not found", &character_id)))?;
+
+    // TODO:
+    // let game = match game_id { 
+    //     some(Path(id)) => {grab existing state},
+    //     None => {Make new state, like below.},
+    // };
 
     // Persist a fresh Game row so the runner has something to update/cleanup
     let game = state.games.create_game(Game::new(body)).await?;
