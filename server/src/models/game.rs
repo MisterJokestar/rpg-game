@@ -38,45 +38,103 @@ pub struct EnemyState {
 }
 
 pub trait Combatant {
-    fn get_block(&self) -> i32;
-    fn set_block(&mut self, new_block: i32);
-    fn get_health(&self) -> (i32, i32);
-    fn set_health(&mut self, new_health: (i32, i32));
+    fn set_block(&mut self, block: i32);
+    fn reset_block(&mut self);
+    fn take_damage(&mut self, damage: i32) -> i32;
+    fn deal_damage(&mut self, damage: i32);
+    fn heal_damage(&mut self, healing: i32);
 }
 
 impl Combatant for PlayerState {
-    fn get_block(&self) -> i32 {
-        self.block
+    fn set_block(&mut self, block: i32) {
+        self.block = block;
     }
 
-    fn set_block(&mut self, new_block: i32) {
-        self.block = new_block;
+    fn reset_block(&mut self) {
+        self.block = 0;
     }
 
-    fn get_health(&self) -> (i32, i32) {
-        self.health
+    fn take_damage(&mut self, damage: i32) -> i32 {
+        let attack_dmg = damage - self.block;
+        if attack_dmg > 0 {
+            self.damage_blocked += self.block;
+            self.block = 0;
+            let (total_hp, mut current_hp) = self.health;
+            current_hp = current_hp - attack_dmg;
+            let mut damage_taken;
+            if current_hp <= 0 {
+                self.health = (total_hp, 0);
+                damage_taken = attack_dmg + current_hp;
+            } else {
+                self.health = (total_hp, current_hp);
+                damage_taken = attack_dmg;
+            }
+            self.damage_taken += damage_taken;
+            return damage_taken
+        } else {
+            self.damage_blocked = damage + attack_dmg;
+            self.block = (-1 * attack_dmg);
+            return 0;
+        }
     }
 
-    fn set_health(&mut self, new_health: (i32, i32)) {
-        self.health = new_health;
+    fn deal_damage(&mut self, damage: i32) {
+        self.damage_dealt += damage;
+    }
+
+    fn heal_damage(&mut self, healing: i32) {
+        let (total_hp, mut current_hp) = self.health;
+        if healing + current_hp > total_hp {
+            self.damage_healed += total_hp - current_hp;
+            self.health = (total_hp, total_hp);
+        } else {
+            self.damage_healed += healing;
+            self.health = (total_hp, current_hp + healing);
+        }
     }
 }
 
 impl Combatant for EnemyState {
-    fn get_block(&self) -> i32 {
-        self.block
+    fn set_block(&mut self, block: i32) {
+        self.block = block;
     }
 
-    fn set_block(&mut self, new_block: i32) {
-        self.block = new_block;
+    fn reset_block(&mut self) {
+        self.block = 0;
     }
 
-    fn get_health(&self) -> (i32, i32) {
-        self.health
+    fn take_damage(&mut self, damage: i32) -> i32 {
+        let attack_dmg = damage - self.block;
+        if attack_dmg > 0 {
+            self.block = 0;
+            let (total_hp, mut current_hp) = self.health;
+            current_hp = current_hp - attack_dmg;
+            let mut damage_taken;
+            if current_hp <= 0 {
+                self.health = (total_hp, 0);
+                damage_taken = attack_dmg + current_hp;
+            } else {
+                self.health = (total_hp, current_hp);
+                damage_taken = attack_dmg;
+            }
+            return damage_taken
+        } else {
+            self.block = (-1 * attack_dmg);
+            return 0;
+        }
     }
 
-    fn set_health(&mut self, new_health: (i32, i32)) {
-        self.health = new_health;
+    fn deal_damage(&mut self, damage: i32) {
+        return
+    }
+
+    fn heal_damage(&mut self, healing: i32) {
+        let (total_hp, mut current_hp) = self.health;
+        if healing + current_hp > total_hp {
+            self.health = (total_hp, total_hp);
+        } else {
+            self.health = (total_hp, current_hp + healing);
+        }
     }
 }
 

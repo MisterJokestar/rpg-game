@@ -121,27 +121,17 @@ fn handle_turn(
     attacker: &mut impl Combatant, 
     defender: &mut impl Combatant
 ) {
-    attacker.set_block(0);
+    attacker.reset_block();
     match action {
         Action::Attack(dmg) => {
-            let defender_block = defender.get_block();
-            let attack_dmg = dmg - defender_block;
-            if attack_dmg > 0 {
-                defender.set_block(0);
-                let (total_hp, mut defender_hp) = defender.get_health();
-                defender_hp = defender_hp - attack_dmg;
-                defender.set_health((total_hp, if defender_hp > 0 {defender_hp} else {0}));
-            } else {
-                defender.set_block(-1 * attack_dmg);
-            }
+            let dealt_dmg = defender.take_damage(dmg);
+            attacker.deal_damage(dealt_dmg);
         },
         Action::Defend(block) => {
             attacker.set_block(block);
         },
         Action::Heal(heal) => {
-            let (total_hp, mut attacker_hp) = attacker.get_health();
-            attacker_hp = attacker_hp + heal;
-            attacker.set_health((total_hp, if attacker_hp > total_hp {total_hp} else {attacker_hp}));
+            attacker.heal_damage(heal);
         },
         Action::None => return
     }
