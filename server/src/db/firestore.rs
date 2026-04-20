@@ -8,8 +8,8 @@ use crate::{
     models::{user::User, game::Game},
 };
 
-const USERS_COLLECTION: &str = "users";
-const GAMES_COLLECTION: &str = "games";
+const USER_COLLECTION: &str = "user";
+const GAME_COLLECTION: &str = "game";
 
 pub struct FirestoreRepository {
     db: FirestoreDb,
@@ -28,8 +28,8 @@ impl FirestoreRepository {
             "Connected to Firestore (project: {}). Collections '{}' and '{}' \
              will be created on first write.",
             project_id,
-            USERS_COLLECTION,
-            GAMES_COLLECTION,
+            USER_COLLECTION,
+            GAME_COLLECTION,
         );
 
         Ok(Self { db })
@@ -42,7 +42,7 @@ impl UserRepository for FirestoreRepository {
         self.db
             .fluent()
             .insert()
-            .into(USERS_COLLECTION)
+            .into(USER_COLLECTION)
             .document_id(&user.id.to_string())
             .object(&user)
             .execute::<User>()
@@ -55,7 +55,7 @@ impl UserRepository for FirestoreRepository {
         self.db
             .fluent()
             .select()
-            .by_id_in(USERS_COLLECTION)
+            .by_id_in(USER_COLLECTION)
             .obj::<User>()
             .one(&id.to_string())
             .await
@@ -66,7 +66,7 @@ impl UserRepository for FirestoreRepository {
         let results: Vec<User> = self.db
             .fluent()
             .select()
-            .from(USERS_COLLECTION)
+            .from(USER_COLLECTION)
             .filter(|q| q.field("username").eq(username))
             .obj::<User>()
             .query()
@@ -79,7 +79,7 @@ impl UserRepository for FirestoreRepository {
         self.db
             .fluent()
             .update()
-            .in_col(USERS_COLLECTION)
+            .in_col(USER_COLLECTION)
             .document_id(&user.id.to_string())
             .object(&user)
             .execute::<User>()
@@ -95,7 +95,7 @@ impl GameRepository for FirestoreRepository {
         self.db
             .fluent()
             .insert()
-            .into(GAMES_COLLECTION)
+            .into(GAME_COLLECTION)
             .document_id(&game.id.to_string())
             .object(&game)
             .execute::<Game>()
@@ -108,7 +108,7 @@ impl GameRepository for FirestoreRepository {
         self.db
             .fluent()
             .select()
-            .by_id_in(GAMES_COLLECTION)
+            .by_id_in(GAME_COLLECTION)
             .obj::<Game>()
             .one(&id.to_string())
             .await
@@ -119,7 +119,7 @@ impl GameRepository for FirestoreRepository {
         self.db
             .fluent()
             .update()
-            .in_col(GAMES_COLLECTION)
+            .in_col(GAME_COLLECTION)
             .document_id(&game.id.to_string())
             .object(&game)
             .execute::<Game>()
@@ -132,7 +132,7 @@ impl GameRepository for FirestoreRepository {
         self.db
             .fluent()
             .select()
-            .from(GAMES_COLLECTION)
+            .from(GAME_COLLECTION)
             .filter(|q| q.field("player_state.player_id").eq(player_id.to_string()))
             .obj::<Game>()
             .query()

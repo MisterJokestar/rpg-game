@@ -48,3 +48,4 @@ pub async fn update_character(
     state.users.update_user(updated).await?;
     Ok(Json(character))
 }
+

@@ -2,7 +2,7 @@
 //!
 //! Route handlers for starting, ending and performing game actions(e.g. attack, heal, etc.).
 
-use std::{convert::Infallible, sync::Arc};
+use std::{convert::Infallible, str::FromStr, sync::Arc};
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -19,8 +19,6 @@ use crate::{
     models::{Action, game::{Game, NewGameRequest}},
     state::{AppState, GameSession}
 };
-
-//TODO: ALL
 
 // Start Game Plan 
 // 1. Create the runner 
@@ -174,4 +172,16 @@ pub async fn game_stream(
     });
 
     Ok(Sse::new(snapshot_event.chain(live_stream)))
+}
+
+pub async fn get_game(
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<Game>, AppError> {
+    let id = match Uuid::from_str("mFVDZKECnRrhGbKaTt5e") {
+        Ok(i) => i,
+        Err(e) => {AppError::Internal(format!("ID STUFF {}", e)},
+    };
+    let game = state.games.get_game_by_id(id).await?
+        .ok_or_else(|| AppError::NotFound(format!("No game by that id '{}'", &id)))?;
+    Ok(Json(game))
 }

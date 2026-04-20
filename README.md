@@ -1,6 +1,9 @@
 # Cloud Final Project
 
+The Final project for Cloud Computing.
 A full-stack web application with a Rust/Axum backend, React/Vike frontend, and MongoDB database. Supports local development via MongoDB and production deployment via Firestore.
+
+Authors: Ryan Jobson, Sam Plemmons, James Wall
 
 ## Stack
 

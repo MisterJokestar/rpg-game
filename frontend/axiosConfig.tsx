@@ -12,10 +12,5 @@ apiClient.interceptors.request.use((config) => {
     return config;
 });
 
-// Sepereate cloud function authorization system.
-export const authClient = axios.create({
-  baseURL: import.meta.env.VITE_AUTH_BASE_URL ?? "http://localhost:5000",
-});
-
 // HOW TO USE
 // const response = await apiClient.get("/games", {request_body});

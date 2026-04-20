@@ -14,8 +14,8 @@ use crate::{
 };
 
 const DEFAULT_DB_NAME: &str = "app_db";
-const USERS_COLLECTION: &str = "users";
-const GAMES_COLLECTION: &str = "games";
+const USERS_COLLECTION: &str = "user";
+const GAMES_COLLECTION: &str = "game";
 
 pub struct MongoRepository {
     users: Collection<User>,
