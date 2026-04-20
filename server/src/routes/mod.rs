@@ -10,7 +10,6 @@ use crate::routes::game::{send_action, start_game, stop_game};
 
 mod items;
 mod character;
-mod state;
 mod game;
 
 pub fn create_router(state: Arc<AppState>) -> Router {
