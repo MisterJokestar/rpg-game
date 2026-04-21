@@ -36,9 +36,6 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # Env / config
 dotenvy = "0.15"
 
-# IDs
-uuid = { version = "1", features = ["v4", "serde"] }
-
 # Async streams (used by MongoDB cursor)
 futures = "0.3"
 

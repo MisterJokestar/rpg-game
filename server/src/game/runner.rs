@@ -63,11 +63,8 @@ impl Runner {
         let seq = self.seq;
         *self.snapshot.write().await = (seq, self.game_state.clone());
         let _ = self.event_tx.send(SequencedEvent { seq, event: GameEvent::GameStopped(self.game_state.clone()) });
-        if let Err(e) = self.games.update_game(
-            self.game_state.clone()
-        ).await {
-            tracing::error!("Failed to persist game state on cleanup: {}", e);
-        }
+
+        // TODO: Call cloud function to write state to db
     }
 
     pub async fn run(&mut self){
@@ -108,7 +105,7 @@ impl Runner {
 }
 
 // on true, player is next, on false, enemy is next.
-fn handle_turn_order(game: &mut Game, character_speed: i32, enemy: &Box<dyn Enemy>) -> bool {
+fn handle_turn_order(game: &mut Game, character_speed: i64, enemy: &Box<dyn Enemy>) -> bool {
     // Gets current turn, players next turn and enemys next turn.
     let current_turn = game.turn;
     let players_next_turn = match game.player_state.next_turn {

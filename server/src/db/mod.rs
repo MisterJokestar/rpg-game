@@ -1,22 +1,15 @@
 use async_trait::async_trait;
-use uuid::Uuid;
-use crate::{error::AppError, models::{user::User, game::Game}};
+use crate::{error::AppError, models::{game::Game, user::{Character, User}}};
 
 #[async_trait]
 pub trait UserRepository: Send + Sync {
-    async fn create_user(&self, user: User) -> Result<User, AppError>;
-    async fn get_user_by_id(&self, id: Uuid) -> Result<Option<User>, AppError>;
-    async fn get_user_by_username(&self, username: &str) -> Result<Option<User>, AppError>;
-    async fn update_user(&self, user: User) -> Result<User, AppError>;
+    async fn get_secret_for_user(&self, user_id: String) -> Result<Option<String>, AppError>;
+    async fn get_character_for_user(&self, user_id: String, character_id: String) -> Result<Option<Character>, AppError>;
 }
 
 #[async_trait]
 pub trait GameRepository: Send + Sync {
-    async fn create_game(&self, game: Game) -> Result<Game, AppError>;
-    async fn get_game_by_id(&self, id: Uuid) -> Result<Option<Game>, AppError>;
-    async fn update_game(&self, game: Game) -> Result<Game, AppError>;
-    async fn list_games_for_player(&self, player_id: Uuid) -> Result<Vec<Game>, AppError>;
+    async fn get_game_by_id(&self, id: String) -> Result<Option<Game>, AppError>;
 }
 
 pub mod firestore;
-pub mod mongodb;

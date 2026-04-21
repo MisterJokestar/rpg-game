@@ -21,11 +21,11 @@ impl Enemy for DummyEnemy {
         EnemyType::Dummy
     }
 
-    fn get_max_health(&self) -> i32 {
+    fn get_max_health(&self) -> i64 {
         100
     }
 
-    fn next_turn(&self) -> i32 {
+    fn next_turn(&self) -> i64 {
         100
     }
 

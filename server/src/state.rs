@@ -3,7 +3,6 @@ use std::{
     sync::Arc,
 };
 use tokio::sync::{mpsc, RwLock, broadcast};
-use uuid::Uuid;
 use crate::{
     db::{GameRepository, UserRepository},
     game::watcher::Watcher,
@@ -16,7 +15,7 @@ use crate::{
 pub struct AppState {
     pub users: Arc<dyn UserRepository>,
     pub games: Arc<dyn GameRepository>,
-    pub sessions: RwLock<HashMap<Uuid, GameSession>>,
+    pub sessions: RwLock<HashMap<String, GameSession>>,
 }
 
 pub struct GameSession {

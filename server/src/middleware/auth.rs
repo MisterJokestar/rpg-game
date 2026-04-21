@@ -20,15 +20,15 @@ pub async fn auth_middleware(
         .ok_or(AppError::Unauthorized)?;
     // parse auth <username>:<secret>
     let mut parts = auth.splitn(2, ":");
-    let username: &str = parts.next().ok_or(AppError::Unauthorized)?;
+    let id: &str = parts.next().ok_or(AppError::Unauthorized)?;
     let secret: &str = parts.next().ok_or(AppError::Unauthorized)?;
 
     // Find the user by username from the DB, returns 401 if not found
-    let user = state.users.get_user_by_username(username).await?
-        .ok_or_else(|| AppError::NotFound(format!("Username '{}' not found", username)))?;
+    let db_secret = state.users.get_secret_for_user(String::from(id)).await?
+        .ok_or_else(|| AppError::NotFound(format!("Username '{}' not found", id)))?;
 
     // Validate the secret matches, if not, return 404
-    if user.secret != secret { return Err(AppError::Unauthorized);}
+    if db_secret != String::from(secret) { return Err(AppError::Unauthorized);}
     
     Ok(next.run(request).await)
 }

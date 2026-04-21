@@ -14,8 +14,8 @@ pub enum EnemyType {
 
 pub trait Enemy: Send + Sync {
     fn get_type(&self) -> EnemyType;
-    fn get_max_health(&self) -> i32;
-    fn next_turn(&self) -> i32;
+    fn get_max_health(&self) -> i64;
+    fn next_turn(&self) -> i64;
     fn choose_action(&self) -> Action;
 }
 

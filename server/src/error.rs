@@ -14,9 +14,6 @@ pub enum AppError {
     #[error("Database error: {0}")]
     Database(String),
 
-    #[error("Serialization error: {0}")]
-    Serialization(String),
-
     #[allow(dead_code)]
     #[error("Unauthorized")]
     Unauthorized,
@@ -38,7 +35,6 @@ impl IntoResponse for AppError {
                 tracing::error!("Database error: {}", msg);
                 (StatusCode::INTERNAL_SERVER_ERROR, "A database error occurred".to_string())
             }
-            AppError::Serialization(msg) => (StatusCode::UNPROCESSABLE_ENTITY, msg.clone()),
             AppError::Unauthorized => (StatusCode::UNAUTHORIZED, "Unauthorized".to_string()),
             AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg.clone()),
             AppError::Internal(msg) => {

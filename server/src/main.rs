@@ -11,12 +11,11 @@ mod state;
 mod enemys;
 mod game;
 
-use config::{Config, DatabaseBackend};
+use config::Config;
 use db::{UserRepository, GameRepository};
-use db::{firestore::FirestoreRepository, mongodb::MongoRepository};
+use db::firestore::FirestoreRepository;
 use state::AppState;
 use tokio::sync::RwLock;
-use uuid::Uuid;
 
 use crate::state::GameSession;
 
@@ -34,23 +33,15 @@ async fn main() -> anyhow::Result<()> {
     let config = Config::from_env();
 
     let (users, games): (Arc<dyn UserRepository>, Arc<dyn GameRepository>) =
-        match config.database_backend {
-            DatabaseBackend::Firestore => {
-                let project_id = config.firestore_project_id.as_deref()
-                    .expect("FIRESTORE_PROJECT_ID must be set when DATABASE_BACKEND=firestore");
-                tracing::info!("Connecting to Firestore (project: {})", project_id);
-                let repo = Arc::new(FirestoreRepository::new(project_id).await?);
-                (repo.clone(), repo)
-            }
-            DatabaseBackend::MongoDB => {
-                let uri = config.mongodb_uri.as_deref().unwrap_or("mongodb://localhost:27017");
-                tracing::info!("Connecting to MongoDB ({})", uri);
-                let repo = Arc::new(MongoRepository::new(uri, config.mongodb_db_name.as_deref()).await?);
-                (repo.clone(), repo)
-            }
+        {
+            let project_id = config.firestore_project_id.as_deref()
+                .expect("FIRESTORE_PROJECT_ID must be set when DATABASE_BACKEND=firestore");
+            tracing::info!("Connecting to Firestore (project: {})", project_id);
+            let repo = Arc::new(FirestoreRepository::new(project_id).await?);
+            (repo.clone(), repo)
         };
 
-    let sessions: RwLock<HashMap<Uuid, GameSession>> = RwLock::new(HashMap::new());
+    let sessions: RwLock<HashMap<String, GameSession>> = RwLock::new(HashMap::new());
 
     let state = Arc::new(AppState { users, games, sessions });
     let app = routes::create_router(state);

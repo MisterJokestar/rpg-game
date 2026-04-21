@@ -2,21 +2,28 @@
 //!
 //! Route handlers for starting, ending and performing game actions(e.g. attack, heal, etc.).
 
-use std::{convert::Infallible, str::FromStr, sync::Arc};
+use std::{
+    convert::Infallible,
+    sync::Arc
+};
 use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::sse::{Event, Sse},
     Json
 };
-use tokio_stream::{StreamExt, wrappers::{BroadcastStream, errors::BroadcastStreamRecvError}};
-use uuid::Uuid;
+use tokio_stream::{
+    StreamExt,
+    wrappers::{
+        BroadcastStream,
+        errors::BroadcastStreamRecvError
+}};
 use futures::{Stream, stream};
 use tokio::sync::Notify;
 use crate::{
     error::AppError,
     game::{runner::Runner, watcher::Watcher},
-    models::{Action, game::{Game, NewGameRequest}},
+    models::{Action, game::Game},
     state::{AppState, GameSession}
 };
 
@@ -29,81 +36,70 @@ use crate::{
 
 // POST /games — builds the runner and watcher for this user, registers the session
 // in AppState and spawns both background tasks
-pub async fn start_game(
-    State(state): State<Arc<AppState>>,
-    Json(body): Json<NewGameRequest>,
-    // game_id: Option<Path<Uuid>>,
-) -> Result<(StatusCode, Json<Game>), AppError> {
-
-    // Copy player_id and character_id since Game takes ownership
-    let player_id = body.player_id;
-    let character_id = body.character_id;
-
-    // Verify the user exists and owns the requested character
-    let user = state.users.get_user_by_id(player_id).await?
-        .ok_or_else(|| AppError::NotFound(format!("Username '{}' not found", &player_id)))?;
-    let character = user.characters.iter()
-        .find(|c| c.id == character_id)
-        .cloned()
-        .ok_or_else(|| AppError::NotFound(format!("Character '{}' not found", &character_id)))?;
-
-    // TODO:
-    // let game = match game_id { 
-    //     some(Path(id)) => {grab existing state},
-    //     None => {Make new state, like below.},
-    // };
-
-    // Persist a fresh Game row so the runner has something to update/cleanup
-    let game = state.games.create_game(Game::new(body)).await?;
-    // Create the runner
-    let mut runner = Runner::new(character, game.clone(), state.games.clone());
-
-    // Make copy of the handles for the session
-    let action_tx = runner.action_tx.clone();
-    let event_tx = runner.event_tx.clone();
-    let cancel = runner.cancel.clone(); // watcher executes to stop runner
-    let snapshot = runner.snapshot.clone();
-
-    // Create the watcher with cancel, ping, and stop
-    let ping = Arc::new(Notify::new());
-    let stop = Arc::new(Notify::new());
-    let watcher = Watcher::new(cancel, ping, stop);
-
-    // Build the GameSession
-    let session = GameSession{
-        action_tx,
-        event_tx,
-        snapshot,
-        watcher: watcher.clone(),
-    };
-
-    {
-        // Register the session under the users id
-        let mut sessions = state.sessions.write().await;
-        sessions.insert(player_id, session);
-    }
-
-    // Fire runner and watcher
-    tokio::spawn(async move { runner.run().await });
-    tokio::spawn(async move { watcher.run().await });
-
-    Ok((StatusCode::CREATED, Json(game)))
-}
+// pub async fn start_game(
+//     State(state): State<Arc<AppState>>,
+//     game_id: Option<Path<String>>,
+// ) -> Result<(StatusCode, Json<Game>), AppError> {
+// 
+//     let game = match game_id { 
+//         Some(Path(id)) => {
+//             state.games.get_game_by_id(id.clone()).await?
+//                 .ok_or_else(|| AppError::NotFound(format!("Game not found with id, '{}'", id)))
+//         },
+//         None => {
+//             // TODO: use cloud function to create game
+//         },
+//     };
+// 
+//     // Create the runner
+//     let mut runner = Runner::new(character, game.clone(), state.games.clone());
+// 
+//     // Make copy of the handles for the session
+//     let action_tx = runner.action_tx.clone();
+//     let event_tx = runner.event_tx.clone();
+//     let cancel = runner.cancel.clone(); // watcher executes to stop runner
+//     let snapshot = runner.snapshot.clone();
+// 
+//     // Create the watcher with cancel, ping, and stop
+//     let ping = Arc::new(Notify::new());
+//     let stop = Arc::new(Notify::new());
+//     let watcher = Watcher::new(cancel, ping, stop);
+// 
+//     // Build the GameSession
+//     let session = GameSession{
+//         action_tx,
+//         event_tx,
+//         snapshot,
+//         watcher: watcher.clone(),
+//     };
+// 
+//     {
+//         // Register the session under the game id
+//         let mut sessions = state.sessions.write().await;
+//         sessions.insert(game.id, session);
+//     }
+// 
+//     // Fire runner and watcher
+//     tokio::spawn(async move { runner.run().await });
+//     tokio::spawn(async move { watcher.run().await });
+// 
+//     Ok((StatusCode::CREATED, Json(game)))
+// }
 
 // Stop Game Plan 
 // 1. grab session from state.sessions by user Uuid 
 // 2. session.watcher.stop.notify_one()
 
-// POST /games/:user_id/stop — signal the watcher to cancel the runner
+// POST /games/:game_id/stop — signal the watcher to cancel the runner
 pub async fn stop_game(
     State(state): State<Arc<AppState>>,
-    Path(user_id): Path<Uuid>,
+    Path(game_id): Path<String>,
 ) -> Result<StatusCode,AppError> {
     // Pull the session out of the map so no other request can use it
     let session = {
         let mut sessions = state.sessions.write().await;
-        sessions.remove(&user_id)
-        .ok_or_else(|| AppError::NotFound(format!("No active session for user '{}'", &user_id)))?
+        sessions.remove(&game_id)
+        .ok_or_else(|| AppError::NotFound(format!("No active session with id, '{}'", &game_id)))?
 
     };
     // Notify the watcher which will cause cancel_runner to fire and then cleanup
@@ -115,17 +111,17 @@ pub async fn stop_game(
 // 2. session.watcher.ping.notify_one() (resets timer)
 // 3. send action with action_tx
 
-// POST /games/:user_id/actions — send a player action to the runner
+// POST /games/:game_id/actions — send a player action to the runner
 pub async fn send_action(
     State(state): State<Arc<AppState>>,
-    Path(user_id): Path<Uuid>,
+    Path(game_id): Path<String>,
     Json(action): Json<Action>,
 ) -> Result<StatusCode, AppError> {
     // Grab session from state.sessions by user Uuid
     let (action_tx, ping) = {
         let sessions = state.sessions.read().await;
-        let session = sessions.get(&user_id)
-        .ok_or_else(|| AppError::NotFound(format!("No active session for user '{}'", &user_id)))?;
+        let session = sessions.get(&game_id)
+        .ok_or_else(|| AppError::NotFound(format!("No active session with id, '{}'", &game_id)))?;
         (session.action_tx.clone(), session.watcher.ping.clone())
     };
     // Reset the watchers idle timer, game is still active
@@ -140,13 +136,13 @@ pub async fn send_action(
 // This is to register the client as a listener for game updates
 pub async fn game_stream(
     State(state): State<Arc<AppState>>,
-    Path(user_id): Path<Uuid>,
+    Path(game_id): Path<String>,
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, AppError> {
     // Subscribe first so no events are missed, then clone the snapshot Arc
     let (rx, snapshot_arc) = {
         let sessions = state.sessions.read().await;
-        let session = sessions.get(&user_id)
-            .ok_or_else(|| AppError::NotFound(format!("No active session for user '{}'", &user_id)))?;
+        let session = sessions.get(&game_id)
+            .ok_or_else(|| AppError::NotFound(format!("No active session for user '{}'", &game_id)))?;
         (session.event_tx.subscribe(), session.snapshot.clone())
     };
 
@@ -177,11 +173,8 @@ pub async fn game_stream(
 pub async fn get_game(
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<Game>, AppError> {
-    let id = match Uuid::from_str("mFVDZKECnRrhGbKaTt5e") {
-        Ok(i) => i,
-        Err(e) => {AppError::Internal(format!("ID STUFF {}", e)},
-    };
-    let game = state.games.get_game_by_id(id).await?
-        .ok_or_else(|| AppError::NotFound(format!("No game by that id '{}'", &id)))?;
+    let id = String::from("mFVDZKECnRrhGbKaTt5e");
+    let game = state.games.get_game_by_id(id.clone()).await?
+        .ok_or_else(|| AppError::NotFound(format!("No game by that id '{}'", id)))?;
     Ok(Json(game))
 }
