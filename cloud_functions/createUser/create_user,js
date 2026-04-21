@@ -1,0 +1,61 @@
+const { initializeApp } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
+const functions = require('firebase-functions');
+const cors = require('cors')({ origin: true});
+const bcrypt = require('bcrypt');
+const crypto = require('crypto');
+
+initializeApp();
+const db = getFirestore();
+
+const SALT = 10;
+const RAND_BYTES = 12;
+const HTTP_STATUS = {
+  CREATED: 201,
+  BAD_REQUEST: 400,
+  CONFLICT: 409,
+  SERVER_ERROR: 500
+};
+
+/** For testing in Cloud Shell
+ * { "username": "testuser", "password": "mypassword123" } 
+ */
+
+exports.createUser = functions.https.onRequest(async (req, res) => {
+    cors(req, res, async () => {
+        try {
+            const { username, password } = req.body;
+
+            if (!username || !password) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).send('Missing username or password');
+            }
+
+            const existing = await db.collection('User')
+            .where("username", "==", username).get();
+
+            if (!existing.empty) {
+            return res.status(HTTP_STATUS.CONFLICT).send('Username already exists');
+            }
+
+            const secret = crypto.randomBytes(RAND_BYTES).toString('hex');
+
+            const salt = await bcrypt.genSalt(SALT);
+            const hashedPassword = await bcrypt.hash(password, salt);
+
+            const docRef = await db.collection('User').add({
+            username: username,
+            password: hashedPassword,
+            secret: secret,
+            });
+            
+            return res.status(HTTP_STATUS.CREATED).json({
+            message: "User created successfully",
+            userId: docRef.id,
+            secret: secret
+            });
+
+        } catch (err) {
+            return res.status(HTTP_STATUS.SERVER_ERROR).send('Server error');
+        }
+    })
+});
