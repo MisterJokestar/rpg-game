@@ -6,6 +6,7 @@ use crate::{
     db::GameRepository,
     enemys::{
         Enemy,
+        EnemyType,
         get_enemy_by_type},
     models::{
         Action,
@@ -61,7 +62,12 @@ impl Runner {
         self.seq += 1;
         let seq = self.seq;
         *self.snapshot.write().await = (seq, self.game_state.clone());
-        let _ = self.event_tx.send(SequencedEvent { seq, event: GameEvent::GameStopped(self.game_state.clone()) });
+        let event = if self.game_state.complete {
+            GameEvent::GameOver(self.game_state.clone())
+        } else {
+            GameEvent::GameStopped(self.game_state.clone())
+        };
+        let _ = self.event_tx.send(SequencedEvent { seq, event });
 
         if let Err(e) = self.games.update_game_by_id(self.game_state.id.clone(), &self.game_state).await {
             tracing::error!("Failed to persist game {} on cleanup: {:?}", self.game_state.id, e);
@@ -96,6 +102,8 @@ impl Runner {
                 let enemys_action = self.enemy.choose_action(&mut self.game_state);
                 handle_turn(enemys_action, &mut self.game_state.enemy_state, &mut self.game_state.player_state);
             }
+            // if player is dead -> exit loop.
+            if self.handle_after_turn() {break};
             // broadcast via event_tx TODO: Error Handling
             self.seq += 1;
             let seq = self.seq;
@@ -103,6 +111,22 @@ impl Runner {
             let _ = self.event_tx.send(SequencedEvent { seq, event: GameEvent::TurnResolved(self.game_state.clone()) });
         } // End of game loop.
         self.cleanup().await;
+    }
+
+    fn handle_after_turn(&mut self) -> bool {
+        // Check if player or enemy died
+        if self.game_state.player_state.health.current == 0 {
+            self.game_state.complete = true;
+            self.game_state.win = Some(self.game_state.round > 3);
+            return true
+        }
+        if self.game_state.enemy_state.health.current == 0 {
+            // Increment round generate new enemy.
+            self.game_state.round += 1;
+            self.enemy = get_enemy_by_type(EnemyType::Dummy);
+            self.game_state.enemy_state = self.enemy.get_new_state();
+        }
+        false
     }
 }
 
@@ -153,7 +177,3 @@ fn handle_turn(
         Action::None => {}
     }
 }
-
-// Handling new rounds?
-//
-// What is the end of a game?

@@ -1,6 +1,5 @@
 use crate::{
-    models::{Action, game::Game},
-    enemys::{Enemy, EnemyType}
+    enemys::{Enemy, EnemyType}, models::{Action, game::{EnemyState, Game, Health}}
 };
 
 // Dummy enemy is a stand in enemy, 
@@ -17,13 +16,17 @@ impl DummyEnemy {
 }
 
 impl Enemy for DummyEnemy {
-    fn get_type(&self) -> EnemyType {
-        EnemyType::Dummy
-    }
-
-    fn get_max_health(&self, state: &mut Game) -> i64 {
-        _ = state;
-        100
+    fn get_new_state(&self) -> EnemyState {
+        EnemyState { 
+            next_turn: None, 
+            state: 0, 
+            health: Health { 
+                current: 100, 
+                max: 100
+            }, 
+            block: 0, 
+            enemy_type: EnemyType::Dummy
+        }
     }
 
     fn next_turn(&self, state: &mut Game) -> i64 {

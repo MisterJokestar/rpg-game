@@ -1,7 +1,10 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    enemys::dummy::DummyEnemy, models::{Action, game::Game}
+    enemys::dummy::DummyEnemy, 
+    models::{
+        Action, 
+        game::{EnemyState, Game}}
 };
 
 pub mod dummy;
@@ -12,8 +15,7 @@ pub enum EnemyType {
 }
 
 pub trait Enemy: Send + Sync {
-    fn get_type(&self) -> EnemyType;
-    fn get_max_health(&self, state: &mut Game) -> i64;
+    fn get_new_state(&self) -> EnemyState;
     fn next_turn(&self, state: &mut Game) -> i64;
     fn choose_action(&self, state: &mut Game) -> Action;
     fn after_players_turn(&self, state: &mut Game);
