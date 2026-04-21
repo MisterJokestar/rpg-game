@@ -4,6 +4,7 @@ use crate::enemys::EnemyType;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Game {
+    #[serde(rename = "_firestore_id")]
     pub id: String,
     pub complete: bool,
     pub win: Option<bool>,
@@ -18,7 +19,7 @@ pub struct PlayerState {
     pub player_id: String,
     pub character_id: String,
     pub next_turn: Option<i64>,
-    pub health: (i64, i64),
+    pub health: Health,
     pub block: i64,
     pub damage_taken: i64,
     pub damage_healed: i64,
@@ -30,9 +31,16 @@ pub struct PlayerState {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnemyState {
     pub next_turn: Option<i64>,
-    pub health: (i64, i64),
+    pub state: i64,
+    pub health: Health,
     pub block: i64,
     pub enemy_type: EnemyType,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Health {
+    pub current: i64,
+    pub max: i64,
 }
 
 pub trait Combatant {
@@ -59,16 +67,16 @@ impl Combatant for PlayerState {
         if attack_dmg > 0 {
             self.damage_blocked += self.block;
             self.block = 0;
-            let (total_hp, mut current_hp) = self.health;
+            let mut current_hp = self.health.current;
             // HP after unblocked damage applied.
             current_hp -= attack_dmg;
             let damage_taken;
             // If HP is reduced to 0, excess damage not logged
             if current_hp <= 0 {
-                self.health = (total_hp, 0);
+                self.health.current = 0;
                 damage_taken = attack_dmg + current_hp;
             } else {
-                self.health = (total_hp, current_hp);
+                self.health.current = current_hp;
                 damage_taken = attack_dmg;
             }
             // Log damage taken.
@@ -90,14 +98,13 @@ impl Combatant for PlayerState {
     }
 
     fn heal_damage(&mut self, healing: i64) {
-        let (total_hp, current_hp) = self.health;
         // Healing shouldn't overflow, caps at total_hp
-        if healing + current_hp > total_hp {
-            self.damage_healed += total_hp - current_hp;
-            self.health = (total_hp, total_hp);
+        if healing + self.health.current > self.health.max {
+            self.damage_healed += self.health.max - self.health.current;
+            self.health.current = self.health.max;
         } else {
             self.damage_healed += healing;
-            self.health = (total_hp, current_hp + healing);
+            self.health.current += healing;
         }
     }
 }
@@ -116,14 +123,14 @@ impl Combatant for EnemyState {
         let attack_dmg = damage - self.block;
         if attack_dmg > 0 {
             self.block = 0;
-            let (total_hp, mut current_hp) = self.health;
+            let mut current_hp = self.health.current;
             current_hp -= attack_dmg;
             let damage_taken;
             if current_hp <= 0 {
-                self.health = (total_hp, 0);
+                self.health.current = 0;
                 damage_taken = attack_dmg + current_hp;
             } else {
-                self.health = (total_hp, current_hp);
+                self.health.current = current_hp;
                 damage_taken = attack_dmg;
             }
             damage_taken
@@ -138,11 +145,10 @@ impl Combatant for EnemyState {
     }
 
     fn heal_damage(&mut self, healing: i64) {
-        let (total_hp, current_hp) = self.health;
-        if healing + current_hp > total_hp {
-            self.health = (total_hp, total_hp);
+        if healing + self.health.current > self.health.max {
+            self.health.current = self.health.max;
         } else {
-            self.health = (total_hp, current_hp + healing);
+            self.health.current += healing;
         }
     }
 }

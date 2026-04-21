@@ -58,13 +58,14 @@ impl Runner {
 
     // On cleanup records game state to database.
     pub async fn cleanup(&mut self) {
-        // TODO: Error Handling
         self.seq += 1;
         let seq = self.seq;
         *self.snapshot.write().await = (seq, self.game_state.clone());
         let _ = self.event_tx.send(SequencedEvent { seq, event: GameEvent::GameStopped(self.game_state.clone()) });
 
-        // TODO: Call cloud function to write state to db
+        if let Err(e) = self.games.update_game_by_id(self.game_state.id.clone(), &self.game_state).await {
+            tracing::error!("Failed to persist game {} on cleanup: {:?}", self.game_state.id, e);
+        };
     }
 
     pub async fn run(&mut self){
@@ -89,9 +90,10 @@ impl Runner {
                     _ = self.cancel.cancelled() => break,
                 };
                 handle_turn(player_action, &mut self.game_state.player_state, &mut self.game_state.enemy_state);
+                self.enemy.after_players_turn(&mut self.game_state);
             } else {
                 // Enemy's Turn
-                let enemys_action = self.enemy.choose_action();
+                let enemys_action = self.enemy.choose_action(&mut self.game_state);
                 handle_turn(enemys_action, &mut self.game_state.enemy_state, &mut self.game_state.player_state);
             }
             // broadcast via event_tx TODO: Error Handling
@@ -114,7 +116,7 @@ fn handle_turn_order(game: &mut Game, character_speed: i64, enemy: &Box<dyn Enem
     };
     let enemy_next_turn = match game.player_state.next_turn {
         Some(turn) => turn,
-        None => {current_turn + enemy.next_turn()},
+        None => {current_turn + enemy.next_turn(game)},
     };
     // Finds out whos turn is next.
     if players_next_turn <= enemy_next_turn {
@@ -124,7 +126,7 @@ fn handle_turn_order(game: &mut Game, character_speed: i64, enemy: &Box<dyn Enem
         return true
     }
     // Enemys turn, update nex_turn and current turn in state.
-    game.enemy_state.next_turn = Some(enemy_next_turn + enemy.next_turn());
+    game.enemy_state.next_turn = Some(enemy_next_turn + enemy.next_turn(game));
     game.turn = enemy_next_turn;
     false
 }
@@ -152,22 +154,6 @@ fn handle_turn(
     }
 }
 
-// TODO: Checklist
-// 1. turn order -> if player_state or enemy_state have a next_turn == None 
-//      use speed to determine next turn.
-//      Set turn to lowest next turn, then complete turn.
-//      Ties are determined that the player will go first.
-//      DONE ! 
+// Handling new rounds?
 //
-// 2. Complete action -> Actions can be three types,
-//      Attack -> subtract opponents block from attack dmg, apply dmg to health.
-//      Defend -> set block to number provided.
-//      heal -> heals the specified number.
-//      DONE !
-//
-// 3. Broadcast state back to client.
-//      Done in cleanup and at end of turn 
-//
-// 4. Handling new rounds?
-//
-// 5. What is the end of a game?
+// What is the end of a game?

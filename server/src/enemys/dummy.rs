@@ -1,5 +1,5 @@
 use crate::{
-    models::Action,
+    models::{Action, game::Game},
     enemys::{Enemy, EnemyType}
 };
 
@@ -21,16 +21,23 @@ impl Enemy for DummyEnemy {
         EnemyType::Dummy
     }
 
-    fn get_max_health(&self) -> i64 {
+    fn get_max_health(&self, state: &mut Game) -> i64 {
+        _ = state;
         100
     }
 
-    fn next_turn(&self) -> i64 {
+    fn next_turn(&self, state: &mut Game) -> i64 {
+        _ = state;
         100
     }
 
     // This will change.
-    fn choose_action(&self) -> Action {
+    fn choose_action(&self, state: &mut Game) -> Action {
+        _ = state;
         Action::None
+    }
+
+    fn after_players_turn(&self, state: &mut Game) {
+        _ = state;
     }
 }

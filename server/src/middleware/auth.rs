@@ -28,7 +28,7 @@ pub async fn auth_middleware(
         .ok_or_else(|| AppError::NotFound(format!("Username '{}' not found", id)))?;
 
     // Validate the secret matches, if not, return 404
-    if db_secret != String::from(secret) { return Err(AppError::Unauthorized);}
+    if db_secret != secret { return Err(AppError::Unauthorized);}
     
     Ok(next.run(request).await)
 }

@@ -7,8 +7,8 @@ use crate::{
     models::{game::Game, user::{Character, User}},
 };
 
-const USER_COLLECTION: &str = "user";
-const GAME_COLLECTION: &str = "game";
+const USER_COLLECTION: &str = "User";
+const GAME_COLLECTION: &str = "Game";
 
 pub struct FirestoreRepository {
     db: FirestoreDb,
@@ -61,13 +61,29 @@ impl UserRepository for FirestoreRepository {
 #[async_trait]
 impl GameRepository for FirestoreRepository {
     async fn get_game_by_id(&self, id: String) -> Result<Option<Game>, AppError> {
-        self.db
+        let result = self.db
             .fluent()
             .select()
             .by_id_in(GAME_COLLECTION)
             .obj::<Game>()
             .one(&id.to_string())
             .await
-            .map_err(|e| AppError::Database(e.to_string()))
+            .map_err(|e| AppError::Database(e.to_string()));
+        tracing::debug!("get_game_by_id({id}) => {:?}", result);
+        result
+    }
+
+    async fn update_game_by_id(&self, id: String, game: &Game) -> Result<(), AppError> {
+        self.db
+            .fluent()
+            .update()
+            .in_col(GAME_COLLECTION)
+            .document_id(&id)
+            .object(game)
+            .execute::<Game>()
+            .await
+            .map_err(|e| AppError::Database(e.to_string()));
+        tracing::debug!("update_game_by_id({id}) => ok");
+        Ok(())
     }
 }

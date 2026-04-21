@@ -10,6 +10,7 @@ pub trait UserRepository: Send + Sync {
 #[async_trait]
 pub trait GameRepository: Send + Sync {
     async fn get_game_by_id(&self, id: String) -> Result<Option<Game>, AppError>;
+    async fn update_game_by_id(&self, id: String, game: &Game) -> Result<(), AppError>;
 }
 
 pub mod firestore;
