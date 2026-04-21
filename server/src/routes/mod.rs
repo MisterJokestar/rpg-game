@@ -13,11 +13,17 @@ use crate::{
 mod game;
 
 pub fn create_router(state: Arc<AppState>) -> Router {
-    Router::new()
+    let authed = Router::new()
         .route("/games/:game_id", post(start_game))
         .route("/games/:game_id/stop", post(stop_game))
         .route("/games/:game_id/actions", post(send_action))
-        .route("/games/:game_id/stream", get(game_stream))
-        .layer(middleware::from_fn_with_state(state.clone(), auth_middleware))
+        .layer(middleware::from_fn_with_state(state.clone(), auth_middleware));
+
+    let public = Router::new()
+        .route("/games/:game_id/stream", get(game_stream));
+
+    Router::new()
+        .merge(authed)
+        .merge(public)
         .with_state(state)
 }
