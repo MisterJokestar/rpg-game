@@ -39,7 +39,7 @@ export default function Page() {
     }
 
     return (
-        <div className="h-screen bg-gray-950 text-white p-8">
+        <div className="min-h-screen bg-gray-950 text-white p-8">
             <h1 className="text-4xl font-bold text-center mb-2">Leaderboard</h1>
             <p className="text-center text-gray-400 mb-6">Sort by:</p>
 
