@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 use crate::enemys::EnemyType;
@@ -12,6 +14,7 @@ pub struct Game {
     pub turn: i64,
     pub player_state: PlayerState,
     pub enemy_state: EnemyState,
+    pub enemys_defeated: HashMap<EnemyType, i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -158,6 +161,7 @@ pub enum GameEvent {
     TurnResolved(Game),
     GameOver(Game),
     GameStopped(Game),
+    GameMessage(String),
 }
 
 #[derive(Debug, Clone, Serialize)]

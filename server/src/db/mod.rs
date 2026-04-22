@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use crate::{error::AppError, models::{game::Game, user::{Character, User}}};
+use crate::{error::AppError, models::{game::Game, user::Character}};
 
 #[async_trait]
 pub trait UserRepository: Send + Sync {

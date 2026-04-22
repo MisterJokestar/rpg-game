@@ -74,7 +74,7 @@ impl GameRepository for FirestoreRepository {
     }
 
     async fn update_game_by_id(&self, id: String, game: &Game) -> Result<(), AppError> {
-        self.db
+        let _ = self.db
             .fluent()
             .update()
             .in_col(GAME_COLLECTION)

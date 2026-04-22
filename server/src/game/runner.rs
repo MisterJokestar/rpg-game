@@ -1,4 +1,5 @@
-use std::sync::Arc;
+use std::{collections::hash_map::Entry, sync::Arc};
+use rand::random_range;
 use tokio::sync::{mpsc, broadcast, RwLock};
 use tokio_util::sync::CancellationToken;
 
@@ -6,8 +7,7 @@ use crate::{
     db::GameRepository,
     enemys::{
         Enemy,
-        EnemyType,
-        get_enemy_by_type},
+        get_enemy_by_type, get_random_enemy},
     models::{
         Action,
         game::{Combatant, Game, GameEvent, SequencedEvent},
@@ -83,7 +83,7 @@ impl Runner {
             let players_turn = handle_turn_order(
                 &mut self.game_state,
                 self.character.stats.speed,
-                &self.enemy,
+                &mut self.enemy,
             );
             // check if enemy's turn or players turn
             if players_turn {
@@ -95,12 +95,12 @@ impl Runner {
                     // watcher canceled runner.
                     _ = self.cancel.cancelled() => break,
                 };
-                handle_turn(player_action, &mut self.game_state.player_state, &mut self.game_state.enemy_state);
-                self.enemy.after_players_turn(&mut self.game_state);
+                handle_turn(&player_action, &mut self.game_state.player_state, &mut self.game_state.enemy_state);
+                self.enemy.after_players_turn(&mut self.game_state, &player_action);
             } else {
                 // Enemy's Turn
                 let enemys_action = self.enemy.choose_action(&mut self.game_state);
-                handle_turn(enemys_action, &mut self.game_state.enemy_state, &mut self.game_state.player_state);
+                handle_turn(&enemys_action, &mut self.game_state.enemy_state, &mut self.game_state.player_state);
             }
             // if player is dead -> exit loop.
             if self.handle_after_turn() {break};
@@ -114,6 +114,9 @@ impl Runner {
     }
 
     fn handle_after_turn(&mut self) -> bool {
+        if let Some(m) = self.enemy.message() {
+            self.broadcast_message(m);
+        }
         // Check if player or enemy died
         if self.game_state.player_state.health.current == 0 {
             self.game_state.complete = true;
@@ -121,22 +124,41 @@ impl Runner {
             return true
         }
         if self.game_state.enemy_state.health.current == 0 {
+            let dead_type = self.game_state.enemy_state.enemy_type;
+            if let Entry::Vacant(e) = self.game_state.enemys_defeated.entry(dead_type) {
+                e.insert(1);
+            } else {
+                let curent_count = self.game_state.enemys_defeated.get_mut(&dead_type).unwrap();
+                *curent_count += 1;
+            }
             // Increment round generate new enemy.
             self.game_state.round += 1;
-            self.enemy = get_enemy_by_type(EnemyType::Dummy);
+            self.enemy = get_random_enemy();
             self.game_state.enemy_state = self.enemy.get_new_state();
         }
         false
     }
+
+    // Broadcast a string message to listeners.
+    fn broadcast_message(&mut self, message: String) {
+        self.seq += 1;
+        let seq = self.seq;
+        // Note: snapshot is NOT updated here
+        let _ = self.event_tx.send(SequencedEvent {
+            seq,
+            event: GameEvent::GameMessage(message),
+        });
+    }
 }
 
 // on true, player is next, on false, enemy is next.
-fn handle_turn_order(game: &mut Game, character_speed: i64, enemy: &Box<dyn Enemy>) -> bool {
+fn handle_turn_order(game: &mut Game, character_speed: i64, enemy: &mut Box<dyn Enemy>) -> bool {
     // Gets current turn, players next turn and enemys next turn.
+    let character_turn_increment = 8 - character_speed;
     let current_turn = game.turn;
     let players_next_turn = match game.player_state.next_turn {
         Some(turn) => turn,
-        None => {current_turn + character_speed}, // Update to determine next turn based on speed.
+        None => {current_turn + character_turn_increment}, // Update to determine next turn based on speed.
     };
     let enemy_next_turn = match game.player_state.next_turn {
         Some(turn) => turn,
@@ -145,7 +167,7 @@ fn handle_turn_order(game: &mut Game, character_speed: i64, enemy: &Box<dyn Enem
     // Finds out whos turn is next.
     if players_next_turn <= enemy_next_turn {
         // players turn is next, update next_turn and current turn in state.
-        game.player_state.next_turn = Some(players_next_turn + character_speed);
+        game.player_state.next_turn = Some(players_next_turn + character_turn_increment);
         game.turn = players_next_turn;
         return true
     }
@@ -157,21 +179,24 @@ fn handle_turn_order(game: &mut Game, character_speed: i64, enemy: &Box<dyn Enem
 
 // Will handle an action.
 fn handle_turn(
-    action: Action, 
+    action: &Action, 
     attacker: &mut impl Combatant, 
     defender: &mut impl Combatant
 ) {
     attacker.reset_block();
     // logic for handling each action held in Combatant class.
     match action {
-        Action::Attack(dmg) => {
+        Action::Attack(power) => {
+            let dmg = random_range(2*power..5*power);
             let dealt_dmg = defender.take_damage(dmg);
             attacker.deal_damage(dealt_dmg);
         },
-        Action::Defend(block) => {
+        Action::Defend(defense) => {
+            let block = random_range(3*defense..5*defense);
             attacker.set_block(block);
         },
-        Action::Heal(heal) => {
+        Action::Heal(defense) => {
+            let heal = random_range(2*defense..4*defense);
             attacker.heal_damage(heal);
         },
         Action::None => {}

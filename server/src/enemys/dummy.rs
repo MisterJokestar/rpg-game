@@ -16,7 +16,7 @@ impl DummyEnemy {
 }
 
 impl Enemy for DummyEnemy {
-    fn get_new_state(&self) -> EnemyState {
+    fn get_new_state(&mut self) -> EnemyState {
         EnemyState { 
             next_turn: None, 
             state: 0, 
@@ -29,18 +29,23 @@ impl Enemy for DummyEnemy {
         }
     }
 
-    fn next_turn(&self, state: &mut Game) -> i64 {
+    fn next_turn(&mut self, state: &mut Game) -> i64 {
         _ = state;
         100
     }
 
     // This will change.
-    fn choose_action(&self, state: &mut Game) -> Action {
+    fn choose_action(&mut self, state: &mut Game) -> Action {
         _ = state;
         Action::None
     }
 
-    fn after_players_turn(&self, state: &mut Game) {
+    fn after_players_turn(&mut self, state: &mut Game, prev_action: &Action) {
         _ = state;
+        _ = prev_action;
+    }
+
+    fn message(&mut self) -> Option<String> {
+        None
     }
 }
