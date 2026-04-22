@@ -30,6 +30,7 @@ export type Game = {
     win: boolean | null;
     round: number;
     turn: number;
+    enemies_defeated: Map<string, number>;
     player_state: PlayerState;
     enemy_state: EnemyState;
 };
