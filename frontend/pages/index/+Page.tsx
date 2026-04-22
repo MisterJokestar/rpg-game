@@ -1,21 +1,11 @@
-import axios from "axios";
-
 export default function Page() {
-    async function makeUser() {
-      let response = await axios.post(
-          'https://create-user-91972588391.us-central1.run.app/',
-        {
-          "username": "testuser",
-          "password": "password123"
-        }
-      );
-      console.log(response);
-    }
+    return (
+        <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center p-8">
+            <h1 className="text-4xl font-bold text-center mb-2">Welcome</h1>
+            <p className="text-center text-gray-400 mb-8">Ready to play?</p>
 
-  return (
-    <>
-      <h1>Hello World</h1>
-      <button onClick={makeUser}> Make a User Test </button>
-    </>
-  );
+            <a href="/login" className="px-8 py-4 bg-yellow-400 text-gray-950 font-bold
+            rounded-lg hover:bg-yellow-300 transition-colors">Continue</a>
+        </div>
+    );
 }
