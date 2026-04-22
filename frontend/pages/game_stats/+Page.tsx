@@ -74,12 +74,36 @@ const games = [
     }
 ];
 import { usePageContext} from "vike-react/usePageContext";
+import { useState, useEffect } from "react";
 
-// Required: Maybe(player_id) and either a character_id(to ref the game) or a game_id
+// fetch game by game_id
+// fetch character using character_id from game
+// return the combined data
+
+
+// Required: game_id
 export default function Page() {
-    const pageContext = usePageContext();
-    const { id } = pageContext.routeParams;
-    const game = games.find(g => g.id === id);
+    const [gameId, setGameId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const id = new URLSearchParams(window.location.search).get("game_id");
+        setGameId(id)
+    }, []);
+
+    const game = games.find(g => g.id === gameId);
+    const character = game ? characters.find(
+        c => c.id === game.player_state.character_id) : null;
+    const player_state = game?.player_state;
+    const enemy_state = game?.enemy_state;
+
+    if (!gameId){
+        return (
+            <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+                <p className="text-gray-400">No game ID provided.</p>
+            </div>
+        )
+    }
+
 
     if (!game){
         return (
@@ -88,8 +112,6 @@ export default function Page() {
             </div>
         );
     }
-    const character = characters.find(c => c.id === game.player_state.character_id);
-    const { player_state, enemy_state } = game;
     return (
         <div className="min-h-screen bg-gray-950 text-white p-8">
             <h1 className="text-4xl font-bold text-center mb-2">Game Stats</h1>
@@ -131,7 +153,7 @@ export default function Page() {
                 {/* Health */}
                 <div className="bg-gray-900 rounded-xl border border-gray-700 p-6">
                     <h2 className="text-gray-400 uppercase text-xs font-semibold mb-4">Health</h2>
-                    <p className="text-xl font-bold">{player_state.health.current} / {player_state.health.max}</p>
+                    <p className="text-xl font-bold">{player_state!.health.current} / {player_state!.health.max}</p>
                 </div>
 
                 {/* Combat Stats */}
@@ -140,23 +162,23 @@ export default function Page() {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <p className="text-gray-400 text-sm">Damage Dealt</p>
-                            <p className="text-xl font-bold text-red-400">{player_state.damage_dealt.toLocaleString()}</p>
+                            <p className="text-xl font-bold text-red-400">{player_state!.damage_dealt.toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Damage Taken</p>
-                            <p className="text-xl font-bold text-orange-400">{player_state.damage_taken.toLocaleString()}</p>
+                            <p className="text-xl font-bold text-orange-400">{player_state!.damage_taken.toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Damage Healed</p>
-                            <p className="text-xl font-bold text-green-400">{player_state.damage_healed.toLocaleString()}</p>
+                            <p className="text-xl font-bold text-green-400">{player_state!.damage_healed.toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Damage Blocked</p>
-                            <p className="text-xl font-bold text-blue-400">{player_state.damage_blocked.toLocaleString()}</p>
+                            <p className="text-xl font-bold text-blue-400">{player_state!.damage_blocked.toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Damage Dodged</p>
-                            <p className="text-xl font-bold text-purple-400">{player_state.damage_dodged.toLocaleString()}</p>
+                            <p className="text-xl font-bold text-purple-400">{player_state!.damage_dodged.toLocaleString()}</p>
                         </div>
                     </div>
                 </div>
@@ -167,11 +189,11 @@ export default function Page() {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <p className="text-gray-400 text-sm">Type</p>
-                            <p className="text-xl font-bold">{enemy_state.enemy_type}</p>
+                            <p className="text-xl font-bold">{enemy_state!.enemy_type}</p>
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Health</p>
-                            <p className="text-xl font-bold">{enemy_state.health.current} / {enemy_state.health.max}</p>
+                            <p className="text-xl font-bold">{enemy_state!.health.current} / {enemy_state!.health.max}</p>
                         </div>
                     </div>
                 </div>

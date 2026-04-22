@@ -1,5 +1,11 @@
 import {useState} from "react";
 
+// 1) Query all completed games
+// 2) group them by player_id, sum damage and count wins
+// 3) fetch username for each player_id
+// 4) sort and return
+
+
 // This is just some temp data for development
 // Eventually will display gamesWon, roundsPlayed, damageDealt, damageTaken, damageHealed
 const players = [
