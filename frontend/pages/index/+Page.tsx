@@ -5,7 +5,7 @@ export default function Page() {
             <p className="text-center text-gray-400 mb-8">Ready to play?</p>
 
             <a href="/login" className="px-8 py-4 bg-yellow-400 text-gray-950 font-bold
-            rounded-lg hover:bg-yellow-300 transition-colors">Continue</a>
+            rounded-lg hover:bg-yellow-300 transition-colors">Login</a>
         </div>
     );
 }
