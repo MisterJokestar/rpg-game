@@ -1,9 +1,10 @@
 use crate::{
-    enemys::{Enemy, EnemyType}, models::{Action, game::{EnemyState, Game, Health}}
+    enemys::{Enemy, EnemyType},
+    models::{
+        Action,
+        game::{EnemyState, Game, Health}
+    }
 };
-
-// Dummy enemy is a stand in enemy, 
-// on its action it will do nothing.
 
 pub struct RoseBuddiesEnemy {
     power: i64,
@@ -67,6 +68,8 @@ impl Enemy for RoseBuddiesEnemy {
     }
 
     fn message(&mut self) -> Option<String> {
-        self.set_message.clone()
+        let send = self.set_message.clone();
+        self.set_message = None;
+        send
     }
 }
