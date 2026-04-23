@@ -17,6 +17,7 @@ async function get_stats(gameId: string) {
 // http://localhost:3000/game_stats?game-id=KLZoO917fyxVAWBRZkCb
 export default function Page() {
     //TODO: Currently does not show enemies defeated
+    //TODO: Check case for if a game is not completed
     const [gameStats, setGameStats] = useState<GameStats | null>(null);
 
     useEffect(() => {
@@ -138,6 +139,11 @@ export default function Page() {
             <a href="/character" className="fixed bottom-8 left-8 px-6 py-3 bg-gray-800 hover:bg-gray-700
             rounded-lg text-base transition-colors"
             >Back</a>
+
+            <a href={`/game_session?game_id=${game_id}`} className="fixed bottom-8 right-8 px-6
+            py-3 bg-yellow-400 text-gray-950 font-bold hover:bg-yellow-300 rounded-lg
+            text-base transition-colors"
+            >Continue Game</a>
         </div>
     );
 }
