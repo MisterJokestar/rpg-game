@@ -43,7 +43,7 @@ pub fn get_random_enemy() -> Box<dyn Enemy> {
     let rn = random_range(0..2);
     match rn {
         0 => Box::new(RoseBuddiesEnemy::new()),
-        2 => Box::new(CopperSidesEnemy::new()),
+        1 => Box::new(CopperSidesEnemy::new()),
         _ => Box::new(DummyEnemy::new()),
     }
 }
