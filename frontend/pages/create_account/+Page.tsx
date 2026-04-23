@@ -1,7 +1,120 @@
+import { ChangeEvent, useState } from "react";
+import axios from "axios";
+import { navigate } from "vike/client/router";
+
+// Function to make the call to the cloud function for getting the game
+async function signup(username: String, password: String) {
+    let response = await axios.post(
+        'https://cloud-functions-91972588391.us-central1.run.app/createUser', // the URL to the cloud function
+        {
+            "username": username,
+            "password": password
+        });
+    return response;
+}
+
+type logn_response = {
+    userId: string,
+    secret: string,
+    success: boolean,
+}
+
 export default function Page() {
+    const [username, setUsername] = useState<string>(""); // entered username stored in username
+    const [password, setPassword] = useState<string>(""); // entered password stored in password
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // I think this needs to be async??????????? <- Yes that is correct.
+    const handleSubmit =  async (e: React.SubmitEvent<HTMLFormElement>) => {
+        e.preventDefault() // prevents the page from refreshing which could lose the data
+        setLoading(true); // prevents the button getting hit twice
+        console.log({ username, password})
+        if (!username || !password){
+            setError("Please enter a username and password");
+            return;
+        }
+
+        const response = await signup(username, password);
+        console.log(response.data);
+        let data: logn_response = response.data;
+
+        if (data.success) {
+            // save secret value and user id to local storage
+            localStorage.setItem("secret", data.secret);
+            localStorage.setItem("userId", data.userId);
+            navigate("/dashboard") // redirect to dashboard
+        } else {
+            setError("Incorrect username or password");
+            return;
+        }
+        setLoading(false); // Button no longer disabled
+    }
+
+    function handleUsernameChange(e: ChangeEvent<HTMLInputElement>) {
+        let new_username = e.target.value;
+        setUsername(new_username);
+    }
+
+    function handlePasswordChange(e: ChangeEvent<HTMLInputElement>) {
+        let new_password = e.target.value;
+        setPassword(new_password);
+    }
+
     return (
-        <>
-            <h1>Create account page</h1>
-        </>
+        <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-8">
+            <div className="w-full max-w-md">
+                <h1 className="text-4xl font-bold text-center mb-2">Sign up</h1>
+
+                <form onSubmit={handleSubmit} className="bg-gray-900 rounded-xl border
+                    border-gray-700 p-8 flex flex-col gap-6">
+
+                    <div>
+                        <label className="text-gray-400 uppercase text-xs font-semibold
+                            mb-2 block">Username</label>
+                        <input type="text"
+                               value={username}
+                               onChange={handleUsernameChange}
+                               className="w-full bg-gray-800 border border-gray-700 rounded-lg
+                                    px-4 py-3 text-white focus:outline-none focus:border-yellow-300 transition-colors"
+                                    placeholder="Enter your username"/>
+                    </div>
+
+                    <div>
+                        <label className="text-gray-400 uppercase text-xs font-semibold
+                            mb-2 block">Password</label>
+                        <input type="password"
+                               value={password}
+                               onChange={handlePasswordChange}
+                               className="w-full bg-gray-800 border border-gray-700 rounded-lg
+                                    px-4 py-3 text-white focus:outline-none focus:border-yellow-300 transition-colors"
+                               placeholder="Enter your password"/>
+                    </div>
+
+                    {error && (
+                        <p className="text-red-400 text-sm">{error}</p>
+                    )}
+
+                    <button type="submit"
+                            className="w-full bg-yellow-400 text-gray-950 font-bold py-3
+                                rounded-lg hover:bg-yellow-300 transition-colors"
+                            disabled={loading}>
+                                {loading ? "Loading" : "Sign up"}
+                    </button>
+                </form>
+            </div>
+
+            <a href="/" className="fixed bottom-8 left-8 px-6 py-3 bg-gray-800 hover:bg-gray-700
+                rounded-lg text-base transition colors"> Home
+            </a>
+
+            <div className="fixed bottom-8 right-8 flex flex-col items-end gap-2">
+                <a href="/login" className="px-6 py-3 bg-gray-800 hover:bg-gray-700
+                    rounded-lg text-base transition-colors">
+                    Log In
+                </a>
+            </div>
+        </div>
     );
 }
+
