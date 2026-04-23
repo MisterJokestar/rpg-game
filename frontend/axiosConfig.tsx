@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Main server api
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_SERVER_BASE_URL ?? "http://localhost:5000",
+  baseURL: "http://localhost:5000",
 });
 
 // Appends the authorization to the reuest headers.

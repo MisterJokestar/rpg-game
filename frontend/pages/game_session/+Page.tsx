@@ -6,11 +6,11 @@ const BASE_URL = import.meta.env.VITE_SERVER_BASE_URL ?? "http://localhost:5000"
 
 export default function Page() {
     const gameIdRef = useRef<string | null>(null);
+    const esRef = useRef<EventSource | null>(null);
 
     const [game, setGame] = useState<Game | null>(null);
     const [status, setStatus] = useState<'starting' | 'running' | 'stopped' | 'error'>('starting');
     const [error, setError] = useState<string | null>(null);
-    const esRef = useRef<EventSource | null>(null);
 
     async function sendAction(action: Action) {
       await apiClient.post(`/games/${gameIdRef.current}/actions`, action);
@@ -26,10 +26,7 @@ export default function Page() {
       const game_id = new URLSearchParams(window.location.search).get('game_id');
       gameIdRef.current = game_id;
 
-      const user_id = localStorage.getItem("user_id");
-      const character_id = localStorage.getItem("character_id");
-
-      apiClient.post(`/games/${game_id}`, { user_id, character_id })
+      apiClient.post(`/games/${game_id}`, { })
         .then(() => {
           const es = new EventSource(BASE_URL + `/games/${game_id}/stream`);
           esRef.current = es;
