@@ -17,6 +17,7 @@ const updateCharacterRoute = require('./routes/update_character');
 const createGameRoute = require('./routes/create_game');
 const updateGameRoute = require('./routes/update_game');
 
+const getCharactersRoute = require('./routes/get_characters');
 const getStatsRoute = require('./routes/get_stats');
 const getLeaderboardRoute = require('./routes/get_leaderboard');
 
@@ -34,6 +35,7 @@ app.use('/updateCharacter', updateCharacterRoute);
 app.use('/createGame', createGameRoute);
 app.use('/updateGame', updateGameRoute);
 
+app.use('/getCharacters', getCharactersRoute);
 app.use('/getStats', getStatsRoute);
 app.use('/getLeaderboard', getLeaderboardRoute);
 
