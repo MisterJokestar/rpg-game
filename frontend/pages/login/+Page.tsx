@@ -1,11 +1,11 @@
 import { ChangeEvent, useState } from "react";
-import axios from "axios";
 import { navigate } from "vike/client/router";
+import { cloudFunctions } from "../../axiosConfig";
 
 // Function to make the call to the cloud function for getting the game
 async function login(username: String, password: String) {
-    let response = await axios.post(
-        'https://cloud-functions-91972588391.us-central1.run.app/login', // the URL to the cloud function
+    let response = await cloudFunctions.post(
+        '/login', // the URL to the cloud function
         {
             "username": username,
             "password": password
