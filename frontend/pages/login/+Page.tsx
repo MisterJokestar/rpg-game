@@ -2,14 +2,14 @@ import { useState } from "react";
 import axios from "axios";
 
 // Function to make the call to the cloud function for getting the game
-async function login() {
+async function login(username: String, password: String) {
     let response = await axios.post(
-        '', // the URL to the cloud function
+        'https://cloud-functions-91972588391.us-central1.run.app/login', // the URL to the cloud function
         {
-            // any args go here, likely username and password
-        }
-    );
-    console.log(response.data);
+            "username": username,
+            "password": password
+        });
+    return response;
 }
 
 export default function Page() {
@@ -17,7 +17,8 @@ export default function Page() {
     const [password, setPassword] = useState(""); // entered password stored in password
     const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
+    // I think this needs to be async???????????
+    const handleSubmit =  async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault() // prevents the page from refreshing which could lose the data
         console.log({ username, password})
         if (!username || !password){
@@ -25,9 +26,21 @@ export default function Page() {
             return;
         }
 
-        //TODO: login logic would go here, likely call cloud function here
+        const response = await login(username, password);
+        console.log(response.data);
 
-        if (true){ // If the username or password is invalid, likely if (response.status == 401)
+        if (response.success) {
+            /* returned json package
+            return res.status(HTTP_STATUS.OK).json({
+                userId: userDoc.id,
+                secret: newSecret,
+                success: true
+            });
+            */
+            // save secret value and user id
+            response.secret;
+            response.userId;
+        } else
             setError("Incorrect username or password");
             return;
         }
@@ -60,7 +73,7 @@ export default function Page() {
                                onChange={e => setPassword(e.target.value)}
                                className="w-full bg-gray-800 border border-gray-700 rounded-lg
                                     px-4 py-3 text-white focus:outline-none focus:border-yellow-300 transition-colors"
-                               placeholder="Enter your username"/>
+                               placeholder="Enter your password"/>
                     </div>
 
                     {error && (
