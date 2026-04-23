@@ -48,7 +48,7 @@ export type Stats = {
 }
 
 export type Character = {
-    id: string;
+    characterId: string;
     name: string;
     stats: Stats;
     games: string[];

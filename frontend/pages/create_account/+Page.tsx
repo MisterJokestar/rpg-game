@@ -1,11 +1,11 @@
 import { ChangeEvent, useState } from "react";
-import axios from "axios";
 import { navigate } from "vike/client/router";
+import { cloudFunctions } from "../../axiosConfig";
 
 // Function to make the call to the cloud function for getting the game
 async function signup(username: String, password: String) {
-    let response = await axios.post(
-        'https://cloud-functions-91972588391.us-central1.run.app/createUser', // the URL to the cloud function
+    let response = await cloudFunctions.post(
+        '/createUser', // the URL to the cloud function
         {
             "username": username,
             "password": password
@@ -43,6 +43,7 @@ export default function Page() {
             // save secret value and user id to local storage
             localStorage.setItem("secret", data.secret);
             localStorage.setItem("userId", data.userId);
+            localStorage.setItem("username", username);
             navigate("/dashboard") // redirect to dashboard
         } else {
             setError("Incorrect username or password");

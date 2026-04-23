@@ -22,7 +22,7 @@ use tokio::sync::Notify;
 use crate::{
     error::AppError,
     game::{runner::Runner, watcher::Watcher},
-    models::{Action, game::Game, user::StartGameRequest},
+    models::{Action, game::Game},
     state::{AppState, GameSession}
 };
 
@@ -31,16 +31,15 @@ use crate::{
 pub async fn start_game(
     State(state): State<Arc<AppState>>,
     Path(game_id): Path<String>,
-    Json(body): Json<StartGameRequest>
 ) -> Result<(StatusCode, Json<Game>), AppError> {
-    let user_id = body.user_id;
-    let character_id = body.character_id;
+    let game = state.games.get_game_by_id(game_id.clone()).await?
+        .ok_or_else(|| AppError::NotFound(format!("Game not found with id, '{}'", game_id)))?;
+
+    let user_id = game.player_state.player_id.clone();
+    let character_id = game.player_state.character_id.clone();
 
     let character = state.users.get_character_for_user(user_id.clone(), character_id.clone()).await?
         .ok_or_else(|| AppError::NotFound(format!("User or Character not found, '{}' '{}'", user_id, character_id)))?;
-
-    let game = state.games.get_game_by_id(game_id.clone()).await?
-        .ok_or_else(|| AppError::NotFound(format!("Game not found with id, '{}'", game_id)))?;
 
     // Create the runner
     let mut runner = Runner::new(character, game.clone(), state.games.clone());

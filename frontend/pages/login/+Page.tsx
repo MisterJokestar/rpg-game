@@ -43,6 +43,7 @@ export default function Page() {
             // save secret value and user id to local storage
             localStorage.setItem("secret", data.secret);
             localStorage.setItem("userId", data.userId);
+            localStorage.setItem("username", username);
             navigate("/dashboard") // redirect to dashboard
         } else {
             setError("Incorrect username or password");

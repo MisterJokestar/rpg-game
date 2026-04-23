@@ -1,4 +1,5 @@
-use axum::{middleware, Router, routing::{post, get}};
+use axum::{Router, http::{Method, header::{AUTHORIZATION, CONTENT_TYPE}}, middleware, routing::{get, post}};
+use tower_http::cors::{CorsLayer, Any};
 use std::sync::Arc;
 
 use crate::{
@@ -26,4 +27,10 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .merge(authed)
         .merge(public)
         .with_state(state)
+        .layer(
+          CorsLayer::new()
+              .allow_origin(Any)
+              .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+              .allow_headers([AUTHORIZATION, CONTENT_TYPE]),
+        )
 }
