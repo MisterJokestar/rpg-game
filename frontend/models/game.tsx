@@ -61,3 +61,24 @@ export type User = {
     secret: string;
     characters: Character[];
 }
+
+export type GameStats = {
+    name: string;
+    win: boolean;
+    round: number;
+    turn: number;
+    status: boolean;
+    stats: Stats;
+    player_state: {
+        damage_blocked: number;
+        damage_dealt: number;
+        damage_dodged: number;
+        damage_healed: number;
+        damage_taken: number;
+        health: Health;
+    }
+    enemy_state: {
+        health: Health;
+        type: string;
+    }
+}
