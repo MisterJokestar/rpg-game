@@ -1,10 +1,11 @@
-import { useState } from "react";
-import axios from "axios";
+import { ChangeEvent, useState } from "react";
+import { navigate } from "vike/client/router";
+import { cloudFunctions } from "../../axiosConfig";
 
 // Function to make the call to the cloud function for getting the game
 async function login(username: String, password: String) {
-    let response = await axios.post(
-        'https://cloud-functions-91972588391.us-central1.run.app/login', // the URL to the cloud function
+    let response = await cloudFunctions.post(
+        '/login', // the URL to the cloud function
         {
             "username": username,
             "password": password
@@ -12,14 +13,22 @@ async function login(username: String, password: String) {
     return response;
 }
 
+type logn_response = {
+    userId: string,
+    secret: string,
+    success: boolean,
+}
+
 export default function Page() {
-    const [username, setUsername] = useState(""); // entered username stored in username
-    const [password, setPassword] = useState(""); // entered password stored in password
+    const [username, setUsername] = useState<string>(""); // entered username stored in username
+    const [password, setPassword] = useState<string>(""); // entered password stored in password
+    const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    // I think this needs to be async???????????
+    // I think this needs to be async??????????? <- Yes that is correct.
     const handleSubmit =  async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault() // prevents the page from refreshing which could lose the data
+        setLoading(true); // prevents the button getting hit twice
         console.log({ username, password})
         if (!username || !password){
             setError("Please enter a username and password");
@@ -28,22 +37,28 @@ export default function Page() {
 
         const response = await login(username, password);
         console.log(response.data);
+        let data: logn_response = response.data;
 
-        if (response.success) {
-            /* returned json package
-            return res.status(HTTP_STATUS.OK).json({
-                userId: userDoc.id,
-                secret: newSecret,
-                success: true
-            });
-            */
+        if (data.success) {
             // save secret value and user id to local storage
-            localStorage.setItem("secret", response.secret);
-            localStorage.setItem("userId", response.userId);
-        } else
+            localStorage.setItem("secret", data.secret);
+            localStorage.setItem("userId", data.userId);
+            navigate("/dashboard") // redirect to dashboard
+        } else {
             setError("Incorrect username or password");
             return;
         }
+        setLoading(false); // Button no longer disabled
+    }
+
+    function handleUsernameChange(e: ChangeEvent<HTMLInputElement>) {
+        let new_username = e.target.value;
+        setUsername(new_username);
+    }
+
+    function handlePasswordChange(e: ChangeEvent<HTMLInputElement>) {
+        let new_password = e.target.value;
+        setPassword(new_password);
     }
 
     return (
@@ -59,7 +74,7 @@ export default function Page() {
                             mb-2 block">Username</label>
                         <input type="text"
                                value={username}
-                               onChange={e => setUsername(e.target.value)}
+                               onChange={handleUsernameChange}
                                className="w-full bg-gray-800 border border-gray-700 rounded-lg
                                     px-4 py-3 text-white focus:outline-none focus:border-yellow-300 transition-colors"
                                     placeholder="Enter your username"/>
@@ -70,7 +85,7 @@ export default function Page() {
                             mb-2 block">Password</label>
                         <input type="password"
                                value={password}
-                               onChange={e => setPassword(e.target.value)}
+                               onChange={handlePasswordChange}
                                className="w-full bg-gray-800 border border-gray-700 rounded-lg
                                     px-4 py-3 text-white focus:outline-none focus:border-yellow-300 transition-colors"
                                placeholder="Enter your password"/>
@@ -82,13 +97,15 @@ export default function Page() {
 
                     <button type="submit"
                             className="w-full bg-yellow-400 text-gray-950 font-bold py-3
-                                rounded-lg hover:bg-yellow-300 transition-colors">Sign in
+                                rounded-lg hover:bg-yellow-300 transition-colors"
+                            disabled={loading}>
+                                {loading ? "Loading" : "Sign in"}
                     </button>
                 </form>
             </div>
 
             <a href="/" className="fixed bottom-8 left-8 px-6 py-3 bg-gray-800 hover:bg-gray-700
-                rounded-lg text-base transition colors">Back
+                rounded-lg text-base transition colors">Home
             </a>
 
             <div className="fixed bottom-8 right-8 flex flex-col items-end gap-2">
