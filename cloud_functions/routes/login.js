@@ -32,14 +32,14 @@ router.post('/', async (req, res) => {
 
         // check fields
         if (!username || !password) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).send('Missing username or password');
+            return res.status(HTTP_STATUS.BAD_REQUEST).send('Missing username or password');
         }
         
         // snapshot of user in firestore database
         const snapshot = await db.collection('User').where("username", "==", username).get();
         
         if (snapshot.empty) {
-        return res.status(HTTP_STATUS.NOT_FOUND).send('User not found');
+            return res.status(HTTP_STATUS.NOT_FOUND).send('User not found');
         }
 
         // .docs returns an array even if there is only 1 data entry
@@ -49,19 +49,19 @@ router.post('/', async (req, res) => {
         // check matching passwords
         const passwordMatch = await bcrypt.compare(password, userData.password);
         if (!passwordMatch) {
-        return res.status(HTTP_STATUS.UNAUTHORIZED).send('Invalid password');
+            return res.status(HTTP_STATUS.UNAUTHORIZED).send('Invalid password');
         }
 
         // generate new secret value
         const newSecret = crypto.randomBytes(RAND_BYTES).toString('hex');
         await db.collection('User').doc(userDoc.id).update({
-        secret: newSecret
+            secret: newSecret
         });
 
         return res.status(HTTP_STATUS.OK).json({
-        userId: userDoc.id,
-        secret: newSecret,
-        success: true
+            userId: userDoc.id,
+            secret: newSecret,
+            success: true
         });
 
     } catch (err) {

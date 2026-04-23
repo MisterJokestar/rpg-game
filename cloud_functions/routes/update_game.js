@@ -93,62 +93,62 @@ router.post('/', async (req, res) => {
         // player state updates
         if (player_state !== undefined) {
             if (player_state.next_turn !== undefined)
-            updates['player_state.next_turn'] = player_state.next_turn;
+                updates['player_state.next_turn'] = player_state.next_turn;
 
             if (player_state.block !== undefined)
-            updates['player_state.block'] = player_state.block;
+                updates['player_state.block'] = player_state.block;
 
             if (player_state.damage_taken !== undefined)
-            updates['player_state.damage_taken'] = player_state.damage_taken;
+                updates['player_state.damage_taken'] = player_state.damage_taken;
 
             if (player_state.damage_healed !== undefined)
-            updates['player_state.damage_healed'] = player_state.damage_healed;
+                updates['player_state.damage_healed'] = player_state.damage_healed;
 
             if (player_state.damage_blocked !== undefined)
-            updates['player_state.damage_blocked'] = player_state.damage_blocked;
+                updates['player_state.damage_blocked'] = player_state.damage_blocked;
 
             if (player_state.damage_dodged !== undefined)
-            updates['player_state.damage_dodged'] = player_state.damage_dodged;
+                updates['player_state.damage_dodged'] = player_state.damage_dodged;
 
             if (player_state.damage_dealt !== undefined)
-            updates['player_state.damage_dealt'] = player_state.damage_dealt;
+                updates['player_state.damage_dealt'] = player_state.damage_dealt;
 
             if (player_state.health !== undefined) {
                 if (player_state.health.current !== undefined)
-                updates['player_state.health.current'] = player_state.health.current;
+                    updates['player_state.health.current'] = player_state.health.current;
 
                 if (player_state.health.max !== undefined)
-                updates['player_state.health.max'] = player_state.health.max;
+                    updates['player_state.health.max'] = player_state.health.max;
             }
         }
 
         // enemy state updates
         if (enemy_state !== undefined) {
             if (enemy_state.next_turn !== undefined)
-            updates['enemy_state.next_turn'] = enemy_state.next_turn;
+                updates['enemy_state.next_turn'] = enemy_state.next_turn;
 
             if (enemy_state.state !== undefined)
-            updates['enemy_state.state'] = enemy_state.state;
+                updates['enemy_state.state'] = enemy_state.state;
 
             if (enemy_state.block !== undefined)
-            updates['enemy_state.block'] = enemy_state.block;
+                updates['enemy_state.block'] = enemy_state.block;
 
             if (enemy_state.enemy_type !== undefined)
-            updates['enemy_state.enemy_type'] = enemy_state.enemy_type;
+                updates['enemy_state.enemy_type'] = enemy_state.enemy_type;
 
             if (enemy_state.health !== undefined) {
-            if (enemy_state.health.current !== undefined)
-                updates['enemy_state.health.current'] = enemy_state.health.current;
+                if (enemy_state.health.current !== undefined)
+                    updates['enemy_state.health.current'] = enemy_state.health.current;
 
-            if (enemy_state.health.max !== undefined)
-                updates['enemy_state.health.max'] = enemy_state.health.max;
+                if (enemy_state.health.max !== undefined)
+                    updates['enemy_state.health.max'] = enemy_state.health.max;
             }
         }
 
         // update enemies defeated
         if (enemies_defeated !== undefined) {
             Object.keys(enemies_defeated).forEach(enemy => {
-            updates[`enemies_defeated.${enemy}`] = enemies_defeated[enemy];
+                updates[`enemies_defeated.${enemy}`] = enemies_defeated[enemy];
             });
         }
 

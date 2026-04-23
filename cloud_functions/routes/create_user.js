@@ -31,7 +31,7 @@ router.post('/', async (req, res) => {
 
         // check fields
         if (!username || !password) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).send('Missing username or password');
+            return res.status(HTTP_STATUS.BAD_REQUEST).send('Missing username or password');
         }
         
         // check if username is already chosen

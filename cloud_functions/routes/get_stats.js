@@ -3,6 +3,10 @@
  * @author: Sam Plemmons
  */
 
+/* example json package
+  { "gameId": "..." }
+*/
+
 const express = require('express');
 const db = require('../firebase');
 

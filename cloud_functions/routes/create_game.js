@@ -27,7 +27,7 @@ router.post('/', async (req, res) => {
         // required fields
         const { userId, secret, characterId } = req.body;
         if (!userId || !secret || !characterId) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).send('Missing required fields');
+            return res.status(HTTP_STATUS.BAD_REQUEST).send('Missing required fields');
         }
 
         const userRef = db.collection('User').doc(userId);
@@ -35,14 +35,14 @@ router.post('/', async (req, res) => {
 
         // check user
         if (!userDoc.exists) {
-        return res.status(HTTP_STATUS.NOT_FOUND).send('User not found');
+            return res.status(HTTP_STATUS.NOT_FOUND).send('User not found');
         }
 
         const userData = userDoc.data();
 
         // validate user
         if (userData.secret !== secret) {
-        return res.status(HTTP_STATUS.UNAUTHORIZED).send('Invalid credentials');
+            return res.status(HTTP_STATUS.UNAUTHORIZED).send('Invalid credentials');
         }
 
         const characterRef = userRef.collection('Characters').doc(characterId);
@@ -50,7 +50,7 @@ router.post('/', async (req, res) => {
 
         // check character
         if (!characterDoc.exists) {
-        return res.status(HTTP_STATUS.NOT_FOUND).send('Character not found');
+            return res.status(HTTP_STATUS.NOT_FOUND).send('Character not found');
         }
 
         const gameRef = db.collection('Game').doc();
@@ -95,8 +95,8 @@ router.post('/', async (req, res) => {
         await gameRef.set(newGame);
 
         return res.status(HTTP_STATUS.CREATED).json({
-        gameId: gameRef.id,
-        success: true
+            gameId: gameRef.id,
+            success: true
         });
 
 
