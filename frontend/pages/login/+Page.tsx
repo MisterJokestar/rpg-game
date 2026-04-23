@@ -37,9 +37,9 @@ export default function Page() {
                 success: true
             });
             */
-            // save secret value and user id
-            response.secret;
-            response.userId;
+            // save secret value and user id to local storage
+            localStorage.setItem("secret", response.secret);
+            localStorage.setItem("userId", response.userId);
         } else
             setError("Incorrect username or password");
             return;
