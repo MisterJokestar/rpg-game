@@ -62,7 +62,9 @@ export type User = {
     characters: Character[];
 }
 
+// add game_id as a string
 export type GameStats = {
+    game_id: string;
     name: string;
     win: boolean;
     round: number;
@@ -81,6 +83,7 @@ export type GameStats = {
         health: Health;
         type: string;
     }
+    enemies_defeated: Map<string, number>;
 }
 
 export type LeaderBoardEntry = {

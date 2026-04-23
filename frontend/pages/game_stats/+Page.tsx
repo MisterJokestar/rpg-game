@@ -14,7 +14,7 @@ async function get_stats(gameId: string) {
     return response.data as GameStats
 }
 
-// http://localhost:3000/game_stats?game-id=jlEFef63JiiXV2bBtqwM
+// http://localhost:3000/game_stats?game-id=KLZoO917fyxVAWBRZkCb
 export default function Page() {
     //TODO: Currently does not show enemies defeated
     const [gameStats, setGameStats] = useState<GameStats | null>(null);
@@ -30,15 +30,16 @@ export default function Page() {
         fetchData();
     }, []);
 
+        const game_id = gameStats?.game_id;
         const character_name = gameStats?.name;
         const player_stats = gameStats?.stats;
         const win = gameStats?.win;
         const round = gameStats?.round;
         const turn = gameStats?.turn;
-        const complete = gameStats?.status;
+        const complete = gameStats?.status; // has the player died
         const player_state = gameStats?.player_state
         const enemy_state = gameStats?.enemy_state;
-        console.log(player_stats?.defense)
+        const enemies_defeated = gameStats?.enemies_defeated;
 
 
     if (!gameStats){
@@ -52,7 +53,7 @@ export default function Page() {
 
         <div className="min-h-screen bg-gray-950 text-white p-8">
             <h1 className="text-4xl font-bold text-center mb-2">Game Stats</h1>
-            {/*<p className="text-center text-gray-400 mb-8">Game ID: {game.id}</p>*/}
+            {<p className="text-center text-gray-400 mb-8">Game ID: {game_id}</p>}
 
             {/* Result */}
             {complete! && (
