@@ -1,11 +1,11 @@
 import {GameStats} from "../../models/game";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import {cloudFunctions} from "../../axiosConfig";
 
 // Function to make the call to the cloud function for getting the game
 async function get_stats(gameId: string) {
-    let response = await axios.post(
-        'https://cloud-functions-91972588391.us-central1.run.app/getStats',
+    let response = await cloudFunctions.post(
+        '/getStats',
         {
             gameId: gameId
         }

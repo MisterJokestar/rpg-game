@@ -82,3 +82,19 @@ export type GameStats = {
         type: string;
     }
 }
+
+export type LeaderBoardEntry = {
+    player_name: string;
+    games_won: number;
+    rounds_survived: number;
+    damage_dealt: number;
+    enemies_defeated: number;
+}
+
+export type LeaderBoardRaw = {
+    player_name: string;
+    win: boolean | null;
+    round: number;
+    damage_dealt: number;
+    enemies_defeated: number;
+}
