@@ -5,12 +5,18 @@ import { Game, Action, Character } from "../../models/game";
 import characterImg from "../../assets/Character.png";
 import copperSidesImg from "../../assets/CopperSides.png";
 import roseBuddiesImg from "../../assets/RoseBuddies.png";
+import maestroImg from "../../assets/Maestro.png";
+import ironLotusImg from "../../assets/IronLotus.png";
+import bombImg from "../../assets/Bomb.png";
 
 const BASE_URL = import.meta.env.VITE_SERVER_BASE_URL ?? "http://localhost:5000";
 
 function getEnemyImage(enemy_type: string): string {
   if (enemy_type === 'CopperSides') return copperSidesImg;
   if (enemy_type === 'RoseBuddies') return roseBuddiesImg;
+  if (enemy_type === 'Maestro') return maestroImg;
+  if (enemy_type === 'IronLotus') return ironLotusImg;
+  if (enemy_type === 'Bomb') return bombImg;
   return characterImg;
 }
 
