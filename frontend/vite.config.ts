@@ -6,4 +6,5 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [vike(), react(), tailwindcss()],
+  base: "https://storage.googleapis.com/cloud-game-frontend-wcu/",
 });
