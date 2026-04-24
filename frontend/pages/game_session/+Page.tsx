@@ -115,8 +115,11 @@ export default function Page() {
         });
 
         es.onerror = () => {
-          setStatus('error');
-          setError('SSE connection error');
+          setStatus(prev => {
+            if (prev === 'stopped') return prev;
+            setError('SSE connection error');
+            return 'error';
+          });
         };
       })
       .catch((err) => {
@@ -158,9 +161,12 @@ export default function Page() {
   if (status === 'stopped') {
     const won = game.win === true;
     const lost = game.win === false;
-    const enemiesDefeated = game.enemies_defeated instanceof Map
-      ? Array.from(game.enemies_defeated.entries())
-      : Object.entries(game.enemies_defeated as unknown as Record<string, number>);
+    const rawEnemiesDefeated = game.enemies_defeated as unknown;
+    const enemiesDefeated: [string, number][] = rawEnemiesDefeated instanceof Map
+      ? Array.from((rawEnemiesDefeated as Map<string, number>).entries())
+      : rawEnemiesDefeated && typeof rawEnemiesDefeated === 'object'
+        ? Object.entries(rawEnemiesDefeated as Record<string, number>)
+        : [];
 
     return (
       <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-8">

@@ -15,7 +15,7 @@ pub struct Game {
     pub player_state: PlayerState,
     pub enemy_state: EnemyState,
     #[serde(default)]
-    pub enemys_defeated: HashMap<EnemyType, i64>,
+    pub enemies_defeated: HashMap<EnemyType, i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

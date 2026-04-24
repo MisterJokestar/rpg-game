@@ -135,10 +135,10 @@ impl Runner {
         }
         if self.game_state.enemy_state.health.current == 0 {
             let dead_type = self.game_state.enemy_state.enemy_type;
-            if let Entry::Vacant(e) = self.game_state.enemys_defeated.entry(dead_type) {
+            if let Entry::Vacant(e) = self.game_state.enemies_defeated.entry(dead_type) {
                 e.insert(1);
             } else {
-                let curent_count = self.game_state.enemys_defeated.get_mut(&dead_type).unwrap();
+                let curent_count = self.game_state.enemies_defeated.get_mut(&dead_type).unwrap();
                 *curent_count += 1;
             }
             // Increment round generate new enemy.
