@@ -1,3 +1,8 @@
+/**
+ * Iron Lotus Enemy: enemy that buils up end of turn burn damage
+ * @authors: Sam Plemmons and James Wall
+ */
+
 use crate::{
     enemys::{Enemy, EnemyType},
     models::{
@@ -66,7 +71,7 @@ impl Enemy for IronLotusEnemy {
         // if player healed, increae burn damage
         if let Action::Heal(_) = prev_action {
             self.burn += 3;
-            self.set_message = Some(String::from("Do you wish for the flames to grow?"));
+            self.set_message = Some(String::from("Do you also wish for the flames to grow?"));
         };
     }
 
