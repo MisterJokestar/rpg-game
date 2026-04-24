@@ -81,7 +81,7 @@ export default function Page() {
                 );
                 characterIdRef.current = response.data.characterId;
             }
-            navigate(`/character?character_id=${characterIdRef.current}`);
+            navigate("/dashboard");
         } catch (error) {
             console.log(error);
         }

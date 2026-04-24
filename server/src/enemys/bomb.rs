@@ -6,13 +6,13 @@ use crate::{
 // on its action it will do nothing.
 
 pub struct BombEnemy {
-    set_message: Option<String>;
+    set_message: Option<String>,
 }
 
 impl BombEnemy {
     pub fn new() -> Self {
         BombEnemy { 
-            set_message = None;
+            set_message: None,
         }
     }
 }
@@ -27,7 +27,7 @@ impl Enemy for BombEnemy {
                 max: 1
             }, 
             block: 0, 
-            enemy_type: EnemyType::Dummy
+            enemy_type: EnemyType::Bomb
         }
     }
 

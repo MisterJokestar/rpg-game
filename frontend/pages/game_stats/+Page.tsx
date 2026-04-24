@@ -1,6 +1,7 @@
 import {GameStats} from "../../models/game";
 import { useState, useEffect } from "react";
 import {cloudFunctions} from "../../axiosConfig";
+import { navigate } from "vike/client/router";
 
 // Function to make the call to the cloud function for getting the game
 async function get_stats(gameId: string) {
@@ -155,13 +156,13 @@ export default function Page() {
                 </div>
             </div>
 
-            <a href="/dashboard" className="fixed bottom-8 left-8 px-6 py-3 bg-gray-800 hover:bg-gray-700
-            rounded-lg text-base transition-colors"
+            <a onClick={() => navigate("/dashboard")} className="fixed bottom-8 left-8 px-6 py-3 bg-gray-800 hover:bg-gray-700
+            rounded-lg text-base transition-colors cursor-pointer"
             >Back</a>
 
-            <a href={`/game_session?game_id=${game_id}`} className="fixed bottom-8 right-8 px-6
+            <a onClick={() => navigate(`/game_session?game_id=${game_id}`)} className="fixed bottom-8 right-8 px-6
             py-3 bg-yellow-400 text-gray-950 font-bold hover:bg-yellow-300 rounded-lg
-            text-base transition-colors"
+            text-base transition-colors cursor-pointer"
             >Continue Game</a>
         </div>
     );

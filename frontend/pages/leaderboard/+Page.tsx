@@ -1,6 +1,7 @@
 import {useEffect, useState} from "react";
 import {LeaderBoardEntry, LeaderBoardRaw} from "../../models/game";
 import {cloudFunctions} from "../../axiosConfig";
+import { navigate } from "vike/client/router";
 
 async function get_leaderboard(): Promise<LeaderBoardRaw[]> {
     let response = await cloudFunctions.post('/getLeaderboard');
@@ -162,8 +163,10 @@ export default function Page() {
                     </table>
                 </div>
             </div>
-            <a href="/" className="fixed bottom-8 left-8 px-6 py-3 bg-gray-800 hover:bg-gray-700
-                rounded-lg text-base transition-colors"
+            <a
+                onClick={() => navigate(localStorage.getItem("userId") ? "/dashboard" : "/")}
+                className="fixed bottom-8 left-8 px-6 py-3 bg-gray-800 hover:bg-gray-700
+                rounded-lg text-base transition-colors cursor-pointer"
             >Back</a>
         </div>
     );

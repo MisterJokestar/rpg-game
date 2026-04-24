@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { navigate } from "vike/client/router";
 import { apiClient, cloudFunctions } from "../../axiosConfig";
 import { Game, Action, Character } from "../../models/game";
 import characterImg from "../../assets/Character.png";
@@ -150,7 +151,10 @@ export default function Page() {
         <div className="bg-gray-900 rounded-2xl p-8 max-w-md w-full text-center space-y-4">
           <p className="text-red-400 text-xl font-semibold">Error</p>
           <p className="text-gray-300">{error}</p>
-          <a href="/" className="inline-block mt-4 px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-xl transition-colors">
+          <a
+            onClick={() => navigate(localStorage.getItem("userId") ? "/dashboard" : "/")}
+            className="inline-block mt-4 px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-xl transition-colors cursor-pointer"
+          >
             Back
           </a>
         </div>
@@ -188,7 +192,10 @@ export default function Page() {
               </div>
             )}
           </div>
-          <a href="/" className="inline-block px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold transition-colors">
+          <a
+            onClick={() => navigate(localStorage.getItem("userId") ? "/dashboard" : "/")}
+            className="inline-block px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold transition-colors cursor-pointer"
+          >
             Back to Character
           </a>
         </div>
