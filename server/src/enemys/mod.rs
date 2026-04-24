@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     enemys::{
-        copper_sides::CopperSidesEnemy, dummy::DummyEnemy, rose_buddies::RoseBuddiesEnemy, maestro::MaestroEnemy
+        copper_sides::CopperSidesEnemy, dummy::DummyEnemy, rose_buddies::RoseBuddiesEnemy, maestro::MaestroEnemy, iron_lotus::IronLotusEnemy
     }, 
     models::{
         Action, 
@@ -15,6 +15,7 @@ pub mod dummy;
 pub mod rose_buddies;
 pub mod copper_sides;
 pub mod maestro;
+pub mod iron_lotus;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EnemyType {
@@ -22,6 +23,7 @@ pub enum EnemyType {
     RoseBuddies,
     CopperSides,
     Maestro,
+    IronLotus,
     #[serde(other)]
     Unknown,
 }
@@ -40,6 +42,7 @@ pub fn get_enemy_by_type(enemy_type: EnemyType) -> Box<dyn Enemy> {
         EnemyType::RoseBuddies => Box::new(RoseBuddiesEnemy::new()),
         EnemyType::CopperSides => Box::new(CopperSidesEnemy::new()),
         EnemyType::Maestro => Box::new(MaestroEnemy::new()),
+        EnemyType::IronLotus => Box::new(IronLotusEnemy::new()),
         EnemyType::Unknown => Box::new(DummyEnemy::new()),
     }
 }
@@ -51,6 +54,7 @@ pub fn get_random_enemy() -> Box<dyn Enemy> {
         0 => Box::new(RoseBuddiesEnemy::new()),
         1 => Box::new(CopperSidesEnemy::new()),
         2 => Box::new(MaestroEnemy::new()),
+        3 => Box::new(IronLotusEnemy::new()),
         _ => Box::new(DummyEnemy::new()),
     }
 }
