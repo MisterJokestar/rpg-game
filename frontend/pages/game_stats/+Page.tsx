@@ -16,8 +16,7 @@ async function get_stats(gameId: string) {
 
 // http://localhost:3000/game_stats?game-id=KLZoO917fyxVAWBRZkCb
 export default function Page() {
-    //TODO: Currently does not show enemies defeated
-    //TODO: Check case for if a game is not completed
+
     const [gameStats, setGameStats] = useState<GameStats | null>(null);
 
     useEffect(() => {
@@ -121,18 +120,35 @@ export default function Page() {
                 </div>
 
                 {/* Enemy */}
-                <div className="bg-gray-900 rounded-xl border border-gray-700 p-6">
-                    <h2 className="text-gray-400 uppercase text-xs font-semibold mb-4">Enemy</h2>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <p className="text-gray-400 text-sm">Type</p>
-                            <p className="text-xl font-bold">{enemy_state!.type}</p>
-                        </div>
-                        <div>
-                            <p className="text-gray-400 text-sm">Health</p>
-                            <p className="text-xl font-bold">{enemy_state!.health.current} / {enemy_state!.health.max}</p>
+                <div className="flex gap-6">
+                    <div className="bg-gray-900 rounded-xl border border-gray-700 p-6 flex-1 self-start">
+                        <h2 className="text-gray-400 uppercase text-xs font-semibold mb-4">Enemy</h2>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-gray-400 text-sm">Type</p>
+                                <p className="text-xl font-bold">{enemy_state!.type}</p>
+                            </div>
+                            <div>
+                                <p className="text-gray-400 text-sm">Health</p>
+                                <p className="text-xl font-bold">{enemy_state!.health.current} / {enemy_state!.health.max}</p>
+                            </div>
                         </div>
                     </div>
+
+                    {enemies_defeated && Object.keys(enemies_defeated).length > 0 &&(
+                        <div className="bg-gray-900 rounded-xl border border-gray-700 p-6 flex-1 self-start">
+                            <h2 className="text-gray-400 uppercase text-xs font-semibold mb-4">Enemies Defeated</h2>
+
+                            <div className="flex flex-col gap-2 overflow-y-auto max-h-40">
+                                {Object.entries(enemies_defeated).map(([enemy, count]) => (
+                                    <div key={enemy} className="flex justify-between">
+                                        <p className="text-gray-300">{enemy}</p>
+                                        <p className="font-bold">x{count}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
