@@ -2,7 +2,7 @@ use crate::{
     enemys::{Enemy, EnemyType},
     models::{
         Action,
-        game::{EnemyState, Game, Health}
+        game::{Combatant, EnemyState, Game, Health}
     }
 };
 
@@ -62,7 +62,7 @@ impl Enemy for RoseBuddiesEnemy {
     fn after_players_turn(&mut self, state: &mut Game, prev_action: &Action) {
         // When player attacks, rose buddies hurts player with "Thorns"
         if let Action::Attack(_) = prev_action {
-            state.player_state.health.current -= 1;
+            state.player_state.deal_damage(1);
             self.set_message = Some(String::from("Thorns!"));
         };
     }
