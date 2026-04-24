@@ -24,7 +24,7 @@ impl MaestroEnemy {
         MaestroEnemy {
             power: 8,
             ammo: 6,
-            defense: 0,
+            defense: -5,
             speed: 4,
             set_message: None
         }
@@ -58,6 +58,7 @@ impl Enemy for MaestroEnemy {
 
     // This will change.
     fn choose_action(&mut self, state: &mut Game) -> Action {
+        _ = state;
         // if they still have ammo, use basic attack
         if self.ammo > 1 {
             self.ammo -= 1; // reduce ammo count
@@ -68,11 +69,11 @@ impl Enemy for MaestroEnemy {
             self.ammo -= 1;
             self.set_message = Some(String::from("This one's bound finish the fight!"));
             Action::Attack(self.power * 2)
-        // reload
+        // reload but takes more damage
         } else {
             self.ammo = 6;
             self.set_message = Some(String::from("Reload!"));
-            Action::None
+            Action::Defend(self.defense)
         }
     }
 
