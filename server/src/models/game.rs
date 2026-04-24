@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::enemys::EnemyType;
+use crate::enemys::{EnemyType, get_random_enemy};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Game {
@@ -14,6 +14,7 @@ pub struct Game {
     pub turn: i64,
     pub player_state: PlayerState,
     pub enemy_state: EnemyState,
+    #[serde(default)]
     pub enemys_defeated: HashMap<EnemyType, i64>,
 }
 
@@ -168,4 +169,15 @@ pub enum GameEvent {
 pub struct SequencedEvent {
     pub seq: u64,
     pub event: GameEvent,
+}
+
+impl Game {
+    pub fn set_up(&mut self) {
+        self.player_state.next_turn = None;
+        self.player_state.health = Health {
+            current: 100,
+            max: 100
+        };
+        self.enemy_state = get_random_enemy().get_new_state();
+    }
 }

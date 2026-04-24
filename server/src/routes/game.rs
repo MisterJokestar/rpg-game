@@ -32,8 +32,10 @@ pub async fn start_game(
     State(state): State<Arc<AppState>>,
     Path(game_id): Path<String>,
 ) -> Result<(StatusCode, Json<Game>), AppError> {
-    let game = state.games.get_game_by_id(game_id.clone()).await?
+    let mut game = state.games.get_game_by_id(game_id.clone()).await?
         .ok_or_else(|| AppError::NotFound(format!("Game not found with id, '{}'", game_id)))?;
+
+    if game.player_state.health.max == 0 {game.set_up();}
 
     let user_id = game.player_state.player_id.clone();
     let character_id = game.player_state.character_id.clone();

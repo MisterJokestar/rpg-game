@@ -22,6 +22,8 @@ pub enum EnemyType {
     RoseBuddies,
     CopperSides,
     Maestro,
+    #[serde(other)]
+    Unknown,
 }
 
 pub trait Enemy: Send + Sync {
@@ -38,6 +40,7 @@ pub fn get_enemy_by_type(enemy_type: EnemyType) -> Box<dyn Enemy> {
         EnemyType::RoseBuddies => Box::new(RoseBuddiesEnemy::new()),
         EnemyType::CopperSides => Box::new(CopperSidesEnemy::new()),
         EnemyType::Maestro => Box::new(MaestroEnemy::new()),
+        EnemyType::Unknown => Box::new(DummyEnemy::new()),
     }
 }
 

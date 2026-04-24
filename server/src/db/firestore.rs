@@ -44,17 +44,25 @@ impl UserRepository for FirestoreRepository {
         Ok(user.map(|u| u.secret))
     }
 
-    async fn get_character_for_user(&self, user_id: String, char_id: String) -> Result<Option<Character>, AppError> {
-        let user: Option<User> = self.db
+    async fn get_character_for_user(
+        &self, user_id: String,
+        char_id: String
+    ) -> Result<Option<Character>, AppError> {
+        let parent = self.db
+            .parent_path(USER_COLLECTION, &user_id)
+            .map_err(|e| AppError::Database(e.to_string()))?;
+
+        let character: Option<Character> = self.db
             .fluent()
             .select()
-            .by_id_in(USER_COLLECTION)
-            .obj::<User>()
-            .one(&user_id)
+            .by_id_in("Characters")
+            .parent(&parent)
+            .obj::<Character>()
+            .one(&char_id)
             .await
             .map_err(|e| AppError::Database(e.to_string()))?;
 
-        Ok(user.and_then(|u| u.characters.into_iter().find(|c| c.id == char_id)))
+        Ok(character)
     }
 }
 

@@ -26,7 +26,7 @@ impl Enemy for CopperSidesEnemy {
     fn get_new_state(&mut self) -> EnemyState {
         EnemyState { 
             next_turn: None, 
-            state: 0, 
+            state: 2, 
             health: Health { 
                 current: 50, 
                 max: 50
@@ -37,7 +37,11 @@ impl Enemy for CopperSidesEnemy {
     }
 
     fn next_turn(&mut self, state: &mut Game) -> i64 {
-        _ = state;
+        // on first call, will adjust initial power depending on round,
+        if state.enemy_state.state == 2 {
+            self.power += state.round;
+            state.enemy_state.state = 0;
+        }
         8
     }
 
@@ -45,7 +49,7 @@ impl Enemy for CopperSidesEnemy {
     fn choose_action(&mut self, state: &mut Game) -> Action {
         // Enemy will attack on turn, then next turn will block.
         if state.enemy_state.state == 0 {
-            state.enemy_state.next_turn = Some(1);
+            state.enemy_state.next_turn = Some(state.turn + 1);
             state.enemy_state.state = 1;
             Action::Attack(self.power)
         } else {

@@ -21,8 +21,8 @@ export default function Page() {
             await grab_character(user_id, secret);
         } else {
             setNewCharacter(true);
-            setTotalPoints(9);
-            setUnusedPoints(6);
+            setTotalPoints(18);
+            setUnusedPoints(15);
             let new_character: Character = {
                 characterId: "",
                 name: "",
@@ -118,7 +118,7 @@ export default function Page() {
         try {
             if (user_id && secret) {
                 let response = await cloudFunctions.post(
-                    '/updateCharacter', // singular
+                    '/createGame', // singular
                     {
                         "userId": user_id,
                         "secret": secret,
@@ -233,7 +233,7 @@ export default function Page() {
                               {character?.games.map(gameId => (
                                   <li
                                       key={gameId}
-                                      onClick={() => navigate(`/game_stats?game_id=${gameId}`)}
+                                      onClick={() => navigate(`/game_stats?game-id=${gameId}`)}
                                       className="bg-gray-800 hover:bg-gray-700 rounded-xl px-5 py-4 cursor-pointer transition-colors"
                                   >
                                       <span className="text-gray-400 text-sm">Game ID: </span>

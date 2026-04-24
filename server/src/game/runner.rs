@@ -85,6 +85,11 @@ impl Runner {
                 self.character.stats.speed,
                 &mut self.enemy,
             );
+            if players_turn {
+                tracing::debug!(turn = self.game_state.turn, "player's turn");
+            } else {
+                tracing::debug!(turn = self.game_state.turn, "enemy's turn");
+            }
             // check if enemy's turn or players turn
             if players_turn {
                 let player_action = tokio::select! {
@@ -102,6 +107,11 @@ impl Runner {
                 let enemys_action = self.enemy.choose_action(&mut self.game_state);
                 handle_turn(&enemys_action, &mut self.game_state.enemy_state, &mut self.game_state.player_state);
             }
+            tracing::debug!(
+                player_hp = self.game_state.player_state.health.current,
+                enemy_hp = self.game_state.enemy_state.health.current,
+                "turn resolved"
+            );
             // if player is dead -> exit loop.
             if self.handle_after_turn() {break};
             // broadcast via event_tx TODO: Error Handling
@@ -133,6 +143,8 @@ impl Runner {
             }
             // Increment round generate new enemy.
             self.game_state.round += 1;
+            self.game_state.turn = 0;
+            self.game_state.player_state.next_turn = None;
             self.enemy = get_random_enemy();
             self.game_state.enemy_state = self.enemy.get_new_state();
         }
@@ -154,16 +166,30 @@ impl Runner {
 // on true, player is next, on false, enemy is next.
 fn handle_turn_order(game: &mut Game, character_speed: i64, enemy: &mut Box<dyn Enemy>) -> bool {
     // Gets current turn, players next turn and enemys next turn.
-    let character_turn_increment = 8 - character_speed;
+    let character_turn_increment = (19 - character_speed) / 3;
     let current_turn = game.turn;
     let players_next_turn = match game.player_state.next_turn {
         Some(turn) => turn,
-        None => {current_turn + character_turn_increment}, // Update to determine next turn based on speed.
+        None => {
+            let next = current_turn + character_turn_increment;
+            game.player_state.next_turn = Some(next);
+            next
+        }, // Update to determine next turn based on speed.
     };
-    let enemy_next_turn = match game.player_state.next_turn {
+    let enemy_next_turn = match game.enemy_state.next_turn {
         Some(turn) => turn,
-        None => {current_turn + enemy.next_turn(game)},
+        None => {
+            let next = current_turn + enemy.next_turn(game);
+            game.enemy_state.next_turn = Some(next);
+            next
+        }, // Update to determine next turn based on speed.
     };
+    tracing::debug!(
+        players_next = players_next_turn,
+        enemy_next = enemy_next_turn,
+        current = current_turn,
+        "turn order"
+    );
     // Finds out whos turn is next.
     if players_next_turn <= enemy_next_turn {
         // players turn is next, update next_turn and current turn in state.
