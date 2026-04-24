@@ -16,8 +16,7 @@ async function get_stats(gameId: string) {
 
 // http://localhost:3000/game_stats?game-id=KLZoO917fyxVAWBRZkCb
 export default function Page() {
-    //TODO: Currently does not show enemies defeated
-    //TODO: Check case for if a game is not completed
+
     const [gameStats, setGameStats] = useState<GameStats | null>(null);
 
     useEffect(() => {
