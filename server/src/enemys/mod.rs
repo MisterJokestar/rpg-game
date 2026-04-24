@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     enemys::{
-        copper_sides::CopperSidesEnemy, dummy::DummyEnemy, rose_buddies::RoseBuddiesEnemy
+        copper_sides::CopperSidesEnemy, dummy::DummyEnemy, rose_buddies::RoseBuddiesEnemy, maestro::MaestroEnemy
     }, 
     models::{
         Action, 
@@ -14,12 +14,14 @@ use crate::{
 pub mod dummy;
 pub mod rose_buddies;
 pub mod copper_sides;
+pub mod maestro;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EnemyType {
     Dummy,
     RoseBuddies,
     CopperSides,
+    Maestro,
 }
 
 pub trait Enemy: Send + Sync {
@@ -35,15 +37,17 @@ pub fn get_enemy_by_type(enemy_type: EnemyType) -> Box<dyn Enemy> {
         EnemyType::Dummy => Box::new(DummyEnemy::new()),
         EnemyType::RoseBuddies => Box::new(RoseBuddiesEnemy::new()),
         EnemyType::CopperSides => Box::new(CopperSidesEnemy::new()),
+        EnemyType::Maestro => Box::new(MaestroEnemy::new()),
     }
 }
 
 pub fn get_random_enemy() -> Box<dyn Enemy> {
     // range is exclusive 0..1 -> 0 to but not including 1
-    let rn = random_range(0..2);
+    let rn = random_range(0..3);
     match rn {
         0 => Box::new(RoseBuddiesEnemy::new()),
         1 => Box::new(CopperSidesEnemy::new()),
+        2 => Box::new(MaestroEnemy::new()),
         _ => Box::new(DummyEnemy::new()),
     }
 }
