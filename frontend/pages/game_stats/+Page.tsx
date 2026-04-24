@@ -33,13 +33,16 @@ export default function Page() {
         const game_id = gameStats?.game_id;
         const character_name = gameStats?.name;
         const player_stats = gameStats?.stats;
-        const win = gameStats?.win;
+        //const win = gameStats?.win;
         const round = gameStats?.round;
         const turn = gameStats?.turn;
         const complete = gameStats?.status; // has the player died
         const player_state = gameStats?.player_state
         const enemy_state = gameStats?.enemy_state;
         const enemies_defeated = gameStats?.enemies_defeated;
+
+        const patch_win = player_state && player_state.health.current === 0 ? false :
+            player_state && round && round > 3 ? true : null;
 
 
     if (!gameStats){
@@ -56,10 +59,10 @@ export default function Page() {
             {<p className="text-center text-gray-400 mb-8">Game ID: {game_id}</p>}
 
             {/* Result */}
-            {complete! && (
-                <div className={`text-center text-2xl font-bold mb-8 ${win! ? "text-green-400" :
+            {patch_win !== null && (
+                <div className={`text-center text-2xl font-bold mb-8 ${patch_win ? "text-green-400" :
                 "text-red-400"}`}>
-                    {win ? "Victory" : "Defeat"}
+                    {patch_win ? "Victory" : "Defeat"}
                 </div>
             )}
 
@@ -152,7 +155,7 @@ export default function Page() {
                 </div>
             </div>
 
-            <a href="/character" className="fixed bottom-8 left-8 px-6 py-3 bg-gray-800 hover:bg-gray-700
+            <a href="/dashboard" className="fixed bottom-8 left-8 px-6 py-3 bg-gray-800 hover:bg-gray-700
             rounded-lg text-base transition-colors"
             >Back</a>
 
