@@ -11,7 +11,7 @@ use crate::{
     models::{
         Action,
         game::{Combatant, Game, GameEvent, SequencedEvent},
-        user::Character
+        character::Character
     }
 };
 

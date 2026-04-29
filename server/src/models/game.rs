@@ -171,6 +171,11 @@ pub struct SequencedEvent {
     pub event: GameEvent,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateGameRequest {
+
+}
+
 impl Game {
     pub fn set_up(&mut self) {
         self.player_state.next_turn = None;

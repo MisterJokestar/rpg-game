@@ -25,6 +25,10 @@ pub enum AppError {
     #[allow(dead_code)]
     #[error("Internal server error: {0}")]
     Internal(String),
+
+    #[allow(dead_code)]
+    #[error("Not Implemented")]
+    NotImplemented,
 }
 
 impl IntoResponse for AppError {
@@ -40,7 +44,8 @@ impl IntoResponse for AppError {
             AppError::Internal(msg) => {
                 tracing::error!("Internal error: {}", msg);
                 (StatusCode::INTERNAL_SERVER_ERROR, "An internal error occurred".to_string())
-            }
+            },
+            AppError::NotImplemented => (StatusCode::NOT_IMPLEMENTED, "Not Implemented".to_string())
         };
 
         (status, Json(json!({ "error": message }))).into_response()

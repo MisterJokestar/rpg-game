@@ -4,7 +4,11 @@ use firestore::FirestoreDb;
 use crate::{
     db::{GameRepository, UserRepository},
     error::AppError,
-    models::{game::Game, user::{Character, User}},
+    models::{
+        game::Game, 
+        user::User,
+        character::Character,
+    },
 };
 
 const USER_COLLECTION: &str = "User";

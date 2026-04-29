@@ -1,4 +1,8 @@
-use axum::{extract::{Request, State}, middleware::Next, response::Response};
+use axum::{
+    extract::{Request, State},
+    middleware::Next,
+    response::Response
+};
 use std::sync::Arc;
 
 use crate::{

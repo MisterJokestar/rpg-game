@@ -1,27 +1,62 @@
-use axum::{Router, http::{Method, header::{AUTHORIZATION, CONTENT_TYPE}}, middleware, routing::{get, post}};
+use axum::{
+    Router,
+    http::{Method, header::{AUTHORIZATION, CONTENT_TYPE}},
+    middleware,
+    routing::{get, post}};
 use tower_http::cors::{CorsLayer, Any};
 use std::sync::Arc;
 
 use crate::{
-    middleware::auth::auth_middleware, routes::game::{
-        game_stream, 
-        send_action,
-        start_game,
-        stop_game,
-    }, state::AppState
+    middleware::auth::auth_middleware,
+    routes::{
+        session::{
+            game_stream, 
+            send_action,
+            start_game,
+            stop_game,
+        },
+        game::{
+            get_game,
+            get_all_games,
+            update_game,
+            create_game,
+        },
+        auth::{
+            login,
+            create_user,
+        },
+        character::{
+            get_character,
+            update_character,
+            create_character,
+        },
+    },
+    state::AppState
 };
 
+mod session;
 mod game;
+mod character;
+mod auth;
 
 pub fn create_router(state: Arc<AppState>) -> Router {
     let authed = Router::new()
-        .route("/games/:game_id", post(start_game))
-        .route("/games/:game_id/stop", post(stop_game))
-        .route("/games/:game_id/actions", post(send_action))
+        .route("/character/:character_id", get(get_character))
+        .route("/character/:character_id", post(update_character))
+        .route("/character/new", post(create_character))
+        .route("/game/:game_id", post(update_game))
+        .route("/game/new", post(create_game))
+        .route("/session/:game_id", post(start_game))
+        .route("/session/:game_id/stop", post(stop_game))
+        .route("/session/:game_id/action", post(send_action))
         .layer(middleware::from_fn_with_state(state.clone(), auth_middleware));
 
     let public = Router::new()
-        .route("/games/:game_id/stream", get(game_stream));
+        .route("/create_user", post(create_user))
+        .route("/login", post(login))
+        .route("/game/:game_id", get(get_game))
+        .route("/games", get(get_all_games))
+        .route("/session/:game_id/stream", get(game_stream));
 
     Router::new()
         .merge(authed)

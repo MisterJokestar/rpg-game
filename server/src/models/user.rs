@@ -8,21 +8,20 @@ pub struct User {
     pub password: String,
     pub secret: String,
     #[serde(default)]
-    pub characters: Vec<Character>
+    pub characters: Vec<String>
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Character {
-    #[serde(rename = "_firestore_id")]
-    pub id: String,
-    pub name: String,
-    pub stats: Stats,
-    pub games: Vec<String>
+#[derive(Debug, Clone, Deserialize)]
+pub struct CreateUserRequest {
+
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Stats {
-    pub power: i64,
-    pub speed: i64,
-    pub defense: i64
+#[derive(Debug, Clone, Deserialize)]
+pub struct LogInRequest {
+
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct LogInResponse {
+
 }
