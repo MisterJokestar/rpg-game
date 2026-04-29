@@ -5,10 +5,15 @@ pub struct User {
     #[serde(rename = "_firestore_id")]
     pub id: String,
     pub username: String,
-    pub password: String,
+    pub password_hash: String,
     pub secret: String,
     #[serde(default)]
     pub characters: Vec<String>
+}
+
+#[derive(Deserialize)]
+pub struct UsernameOnly {
+    pub username: String
 }
 
 #[derive(Debug, Clone, Deserialize)]

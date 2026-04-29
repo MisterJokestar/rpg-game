@@ -1,18 +1,19 @@
 use async_trait::async_trait;
-use firestore::FirestoreDb;
+use firestore::{FirestoreDb, path, paths};
 
 use crate::{
-    db::{GameRepository, UserRepository},
+    db::{CharacterRepository, GameRepository, UserRepository},
     error::AppError,
     models::{
-        game::Game, 
-        user::User,
-        character::Character,
+        character::{Character},
+        game::Game,
+        user::{User, UsernameOnly}
     },
 };
 
 const USER_COLLECTION: &str = "User";
 const GAME_COLLECTION: &str = "Game";
+const CHARACTER_COLLECTION: &str = "Character";
 
 pub struct FirestoreRepository {
     db: FirestoreDb,
@@ -35,6 +36,50 @@ impl FirestoreRepository {
 
 #[async_trait]
 impl UserRepository for FirestoreRepository {
+    async fn get_users(&self) -> Result<Vec<String>, AppError> {
+        let users: Vec<UsernameOnly> = self.db
+            .fluent()
+            .select()
+            .fields(paths!(User::username))
+            .from(USER_COLLECTION)
+            .obj::<UsernameOnly>()
+            .query()
+            .await
+            .map_err(|e| AppError::Database(e.to_string()))?;
+
+        Ok(users.into_iter().map(|u| u.username).collect())
+    }
+
+    async fn create_user(&self, user: &User) -> Result<(), AppError>{
+        let _ = self.db
+            .fluent()
+            .insert()
+            .into(USER_COLLECTION)
+            .document_id(&user.id)
+            .object(user)
+            .execute::<User>()
+            .await
+            .map_err(|e| AppError::Database(e.to_string()))?;
+
+        Ok(())
+    }
+
+    async fn get_user_hash(&self, username: String) -> Result<Option<String>, AppError> {
+        let users: Vec<User> = self.db
+            .fluent()
+            .select()
+            .from(USER_COLLECTION)
+            .filter(|q| {
+                q.field(path!(User::username)).eq(&username)
+            })
+            .obj::<User>()
+            .query()
+            .await
+            .map_err(|e| AppError::Database(e.to_string()))?;
+
+        Ok(users.into_iter().next().map(|u| u.password_hash))
+    }
+
     async fn get_secret_for_user(&self, user_id: String) -> Result<Option<String>, AppError> {
         let user: Option<User> = self.db
             .fluent()
@@ -47,32 +92,11 @@ impl UserRepository for FirestoreRepository {
 
         Ok(user.map(|u| u.secret))
     }
-
-    async fn get_character_for_user(
-        &self, user_id: String,
-        char_id: String
-    ) -> Result<Option<Character>, AppError> {
-        let parent = self.db
-            .parent_path(USER_COLLECTION, &user_id)
-            .map_err(|e| AppError::Database(e.to_string()))?;
-
-        let character: Option<Character> = self.db
-            .fluent()
-            .select()
-            .by_id_in("Characters")
-            .parent(&parent)
-            .obj::<Character>()
-            .one(&char_id)
-            .await
-            .map_err(|e| AppError::Database(e.to_string()))?;
-
-        Ok(character)
-    }
 }
 
 #[async_trait]
 impl GameRepository for FirestoreRepository {
-    async fn get_game_by_id(&self, id: String) -> Result<Option<Game>, AppError> {
+    async fn get_game(&self, id: String) -> Result<Option<Game>, AppError> {
         let result = self.db
             .fluent()
             .select()
@@ -81,11 +105,11 @@ impl GameRepository for FirestoreRepository {
             .one(&id.to_string())
             .await
             .map_err(|e| AppError::Database(e.to_string()));
-        tracing::debug!("get_game_by_id({id}) => {:?}", result);
+
         result
     }
 
-    async fn update_game_by_id(&self, id: String, game: &Game) -> Result<(), AppError> {
+    async fn update_game(&self, id: String, game: &Game) -> Result<(), AppError> {
         let _ = self.db
             .fluent()
             .update()
@@ -95,7 +119,87 @@ impl GameRepository for FirestoreRepository {
             .execute::<Game>()
             .await
             .map_err(|e| AppError::Database(e.to_string()));
-        tracing::debug!("update_game_by_id({id}) => ok");
+
+        Ok(())
+    }
+
+    async fn create_game(&self, game: &Game) -> Result<(), AppError> {
+        let _ = self.db
+            .fluent()
+            .insert()
+            .into(GAME_COLLECTION)
+            .document_id(&game.id)
+            .object(game)
+            .execute::<Game>()
+            .await
+            .map_err(|e| AppError::Database(e.to_string()))?;
+
+        Ok(())
+    }
+
+    async fn get_all_games(&self) -> Result<Vec<Game>, AppError> {
+        let games: Vec<Game> = self.db
+            .fluent()
+            .select()
+            .from(GAME_COLLECTION)
+            .obj::<Game>()
+            .query()
+            .await
+            .map_err(|e| AppError::Database(e.to_string()))?;
+
+        Ok(games)
+    }
+}
+
+#[async_trait]
+impl CharacterRepository for FirestoreRepository {
+    async fn get_character(
+        &self,
+        char_id: String
+    ) -> Result<Option<Character>, AppError> {
+        let character: Option<Character> = self.db
+            .fluent()
+            .select()
+            .by_id_in(CHARACTER_COLLECTION)
+            .obj::<Character>()
+            .one(&char_id)
+            .await
+            .map_err(|e| AppError::Database(e.to_string()))?;
+
+        Ok(character)
+    }
+
+    async fn update_character(
+        &self,
+        character: &Character,
+    ) -> Result<(), AppError> {
+        let _ = self.db
+            .fluent()
+            .update()
+            .in_col(CHARACTER_COLLECTION)
+            .document_id(&character.id)
+            .object(character)
+            .execute::<Character>()
+            .await
+            .map_err(|e| AppError::Database(e.to_string()))?;
+
+        Ok(())
+    }
+
+    async fn create_character(
+        &self,
+        character: &Character,
+    ) -> Result<(), AppError> {
+        let _ = self.db
+            .fluent()
+            .insert()
+            .into(CHARACTER_COLLECTION)
+            .document_id(&character.id)
+            .object(character)
+            .execute::<Character>()
+            .await
+            .map_err(|e| AppError::Database(e.to_string()))?;
+
         Ok(())
     }
 }

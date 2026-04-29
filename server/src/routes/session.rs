@@ -32,7 +32,7 @@ pub async fn start_game(
     State(state): State<Arc<AppState>>,
     Path(game_id): Path<String>,
 ) -> Result<(StatusCode, Json<Game>), AppError> {
-    let mut game = state.games.get_game_by_id(game_id.clone()).await?
+    let mut game = state.games.get_game(game_id.clone()).await?
         .ok_or_else(|| AppError::NotFound(format!("Game not found with id, '{}'", game_id)))?;
 
     if game.player_state.health.max == 0 {game.set_up();}
@@ -40,7 +40,7 @@ pub async fn start_game(
     let user_id = game.player_state.player_id.clone();
     let character_id = game.player_state.character_id.clone();
 
-    let character = state.users.get_character_for_user(user_id.clone(), character_id.clone()).await?
+    let character = state.characters.get_character(user_id.clone(), character_id.clone()).await?
         .ok_or_else(|| AppError::NotFound(format!("User or Character not found, '{}' '{}'", user_id, character_id)))?;
 
     // Create the runner

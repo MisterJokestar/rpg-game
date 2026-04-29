@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 pub struct Character {
     #[serde(rename = "_firestore_id")]
     pub id: String,
+    pub owner: String,
     pub name: String,
     pub stats: Stats,
     pub games: Vec<String>

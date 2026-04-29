@@ -69,7 +69,7 @@ impl Runner {
         };
         let _ = self.event_tx.send(SequencedEvent { seq, event });
 
-        if let Err(e) = self.games.update_game_by_id(self.game_state.id.clone(), &self.game_state).await {
+        if let Err(e) = self.games.update_game(self.game_state.id.clone(), &self.game_state).await {
             tracing::error!("Failed to persist game {} on cleanup: {:?}", self.game_state.id, e);
         };
     }

@@ -4,7 +4,11 @@ use std::{
 };
 use tokio::sync::{mpsc, RwLock, broadcast};
 use crate::{
-    db::{GameRepository, UserRepository},
+    db::{
+        CharacterRepository,
+        GameRepository,
+        UserRepository
+    },
     game::watcher::Watcher,
     models::{Action, game::{Game, SequencedEvent}},
 };
@@ -15,6 +19,7 @@ use crate::{
 pub struct AppState {
     pub users: Arc<dyn UserRepository>,
     pub games: Arc<dyn GameRepository>,
+    pub characters: Arc<dyn CharacterRepository>,
     pub sessions: RwLock<HashMap<String, GameSession>>,
 }
 
