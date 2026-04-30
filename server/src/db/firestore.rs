@@ -50,12 +50,25 @@ impl UserRepository for FirestoreRepository {
         Ok(users.into_iter().map(|u| u.username).collect())
     }
 
+    async fn get_user(&self, user_id: String) -> Result<Option<User>, AppError> {
+        let user: Option<User> = self.db
+            .fluent()
+            .select()
+            .by_id_in(USER_COLLECTION)
+            .obj::<User>()
+            .one(&user_id)
+            .await
+            .map_err(|e| AppError::Database(e.to_string()))?;
+
+        Ok(user)
+    }
+
     async fn create_user(&self, user: &User) -> Result<(), AppError>{
         let _ = self.db
             .fluent()
             .insert()
             .into(USER_COLLECTION)
-            .document_id(&user.id)
+            .document_id(&user.id.to_string())
             .object(user)
             .execute::<User>()
             .await
@@ -64,20 +77,18 @@ impl UserRepository for FirestoreRepository {
         Ok(())
     }
 
-    async fn get_user_hash(&self, username: String) -> Result<Option<String>, AppError> {
-        let users: Vec<User> = self.db
+    async fn update_user(&self, user: &User) -> Result<(), AppError> {
+        let _ = self.db
             .fluent()
-            .select()
-            .from(USER_COLLECTION)
-            .filter(|q| {
-                q.field(path!(User::username)).eq(&username)
-            })
-            .obj::<User>()
-            .query()
+            .update()
+            .in_col(USER_COLLECTION)
+            .document_id(&user.id.to_string())
+            .object(user)
+            .execute::<User>()
             .await
-            .map_err(|e| AppError::Database(e.to_string()))?;
+            .map_err(|e| AppError::Database(e.to_string()));
 
-        Ok(users.into_iter().next().map(|u| u.password_hash))
+        Ok(())
     }
 
     async fn get_secret_for_user(&self, user_id: String) -> Result<Option<String>, AppError> {
@@ -155,14 +166,14 @@ impl GameRepository for FirestoreRepository {
 impl CharacterRepository for FirestoreRepository {
     async fn get_character(
         &self,
-        char_id: String
+        character_id: String
     ) -> Result<Option<Character>, AppError> {
         let character: Option<Character> = self.db
             .fluent()
             .select()
             .by_id_in(CHARACTER_COLLECTION)
             .obj::<Character>()
-            .one(&char_id)
+            .one(&character_id)
             .await
             .map_err(|e| AppError::Database(e.to_string()))?;
 

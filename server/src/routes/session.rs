@@ -40,7 +40,7 @@ pub async fn start_game(
     let user_id = game.player_state.player_id.clone();
     let character_id = game.player_state.character_id.clone();
 
-    let character = state.characters.get_character(user_id.clone(), character_id.clone()).await?
+    let character = state.characters.get_character(character_id.clone()).await?
         .ok_or_else(|| AppError::NotFound(format!("User or Character not found, '{}' '{}'", user_id, character_id)))?;
 
     // Create the runner

@@ -7,8 +7,9 @@ use crate::{
 #[async_trait]
 pub trait UserRepository: Send + Sync {
     async fn get_users(&self) -> Result<Vec<String>, AppError>;
+    async fn get_user(&self, username: String) -> Result<Option<User>, AppError>;
     async fn create_user(&self, user: &User) -> Result<(), AppError>;
-    async fn get_user_hash(&self, username: String) -> Result<Option<String>, AppError>;
+    async fn update_user(&self, user: &User) -> Result<(), AppError>;
     async fn get_secret_for_user(&self, user_id: String) -> Result<Option<String>, AppError>;
 }
 

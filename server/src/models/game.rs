@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::enemys::{EnemyType, get_random_enemy};
 
@@ -171,12 +172,40 @@ pub struct SequencedEvent {
     pub event: GameEvent,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct CreateGameRequest {
-
+    pub player_id: String,
+    pub character_id: String,
 }
 
 impl Game {
+    pub fn new(player: String, character: String) -> Self {
+        Game {
+            id: Uuid::now_v7().to_string(),
+            complete: false,
+            win: None,
+            round: 0,
+            turn: 0,
+            player_state: PlayerState {
+    			player_id: player,
+    			character_id: character,
+    			next_turn: None,
+    			health: Health {
+                    current: 100,
+                    max: 100
+                },
+    			block: 0,
+    			damage_taken: 0,
+    			damage_healed: 0,
+    			damage_blocked: 0,
+    			damage_dodged: 0,
+    			damage_dealt: 0,
+            },
+            enemy_state: get_random_enemy().get_new_state(),
+            enemies_defeated: HashMap::new(),
+        }
+    }
+
     pub fn set_up(&mut self) {
         self.player_state.next_turn = None;
         self.player_state.health = Health {
