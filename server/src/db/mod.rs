@@ -29,4 +29,8 @@ pub trait CharacterRepository: Send + Sync {
     async fn create_character(&self, character: &Character) -> Result<(), AppError>;
 }
 
+#[cfg(feature = "firestore")]
 pub mod firestore;
+
+#[cfg(feature = "mongodb")]
+pub mod mongodb;

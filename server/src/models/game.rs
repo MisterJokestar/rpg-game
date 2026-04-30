@@ -7,7 +7,8 @@ use crate::enemys::{EnemyType, get_random_enemy};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Game {
-    #[serde(rename = "_firestore_id")]
+    #[cfg_attr(feature = "firestore", serde(rename = "_firestore_id"))]
+    #[cfg_attr(feature = "mongodb", serde(rename = "_id"))]
     pub id: String,
     pub complete: bool,
     pub win: Option<bool>,

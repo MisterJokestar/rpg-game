@@ -9,7 +9,8 @@ const HASH_COST: u32 = 10;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
-    #[serde(rename = "_firestore_id")]
+    #[cfg_attr(feature = "firestore", serde(rename = "_firestore_id"))]
+    #[cfg_attr(feature = "mongodb", serde(rename = "_id"))]
     pub id: String,
     pub username: String,
     pub password_hash: String,

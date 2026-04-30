@@ -12,12 +12,14 @@ mod enemys;
 mod game;
 
 use config::Config;
-use db::{UserRepository, GameRepository};
+use db::{UserRepository, GameRepository, CharacterRepository};
+#[cfg(feature = "firestore")]
 use db::firestore::FirestoreRepository;
+#[cfg(feature = "mongodb")]
+use db::mongodb::MongoRepository;
 use state::AppState;
 use tokio::sync::RwLock;
 
-use crate::db::CharacterRepository;
 use crate::state::GameSession;
 
 #[tokio::main]
@@ -33,14 +35,21 @@ async fn main() -> anyhow::Result<()> {
 
     let config = Config::from_env();
 
-    let (users, games, characters): (Arc<dyn UserRepository>, Arc<dyn GameRepository>, Arc<dyn CharacterRepository>) =
-        {
-            let project_id = config.firestore_project_id.as_deref()
-                .expect("FIRESTORE_PROJECT_ID must be set when DATABASE_BACKEND=firestore");
-            tracing::info!("Connecting to Firestore (project: {})", project_id);
-            let repo = Arc::new(FirestoreRepository::new(project_id).await?);
-            (repo.clone(), repo.clone(), repo)
-        };
+    #[cfg(feature = "firestore")]
+    let (users, games, characters): (Arc<dyn UserRepository>, Arc<dyn GameRepository>, Arc<dyn CharacterRepository>) = {
+        let project_id = config.firestore_project_id.as_deref()
+            .expect("FIRESTORE_PROJECT_ID must be set");
+        tracing::info!("Connecting to Firestore (project: {})", project_id);
+        let repo = Arc::new(FirestoreRepository::new(project_id).await?);
+        (repo.clone() as Arc<dyn UserRepository>, repo.clone() as Arc<dyn GameRepository>, repo as Arc<dyn CharacterRepository>)
+    };
+
+    #[cfg(feature = "mongodb")]
+    let (users, games, characters): (Arc<dyn UserRepository>, Arc<dyn GameRepository>, Arc<dyn CharacterRepository>) = {
+        tracing::info!("Connecting to MongoDB (uri: {})", config.mongodb_uri);
+        let repo = Arc::new(MongoRepository::new(&config.mongodb_uri).await?);
+        (repo.clone() as Arc<dyn UserRepository>, repo.clone() as Arc<dyn GameRepository>, repo as Arc<dyn CharacterRepository>)
+    };
 
     let sessions: RwLock<HashMap<String, GameSession>> = RwLock::new(HashMap::new());
 

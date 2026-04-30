@@ -3,7 +3,8 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Character {
-    #[serde(rename = "_firestore_id")]
+    #[cfg_attr(feature = "firestore", serde(rename = "_firestore_id"))]
+    #[cfg_attr(feature = "mongodb", serde(rename = "_id"))]
     pub id: String,
     pub owner: String,
     pub name: String,
