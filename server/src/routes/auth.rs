@@ -43,7 +43,7 @@ pub async fn login(
     Json(request): Json<LogInRequest>,
 ) -> Result<(StatusCode, Json<LogInResponse>), AppError> {
     let username = request.username.clone();
-    let mut user = state.users.get_user(request.username).await?
+    let mut user = state.users.get_user_by_name(request.username).await?
         .ok_or_else(|| AppError::NotFound(format!("User, {}, Does not exist.", username)))?;
     let check = match user.check_password(request.password) {
         Ok(c) => c,

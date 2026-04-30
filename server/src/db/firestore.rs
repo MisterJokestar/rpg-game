@@ -50,7 +50,23 @@ impl UserRepository for FirestoreRepository {
         Ok(users.into_iter().map(|u| u.username).collect())
     }
 
-    async fn get_user(&self, user_id: String) -> Result<Option<User>, AppError> {
+    async fn get_user_by_name(&self, username: String) -> Result<Option<User>, AppError> {
+        let user: Vec<User> = self.db
+            .fluent()
+            .select()
+            .from(USER_COLLECTION)
+            .filter(|q| {
+                q.field(path!(User::username)).eq(username.clone())
+            })
+            .obj::<User>()
+            .query()
+            .await
+            .map_err(|e| AppError::Database(e.to_string()))?;
+
+        Ok(user.into_iter().next())
+    }
+
+    async fn get_user_by_id(&self, user_id: String) -> Result<Option<User>, AppError> {
         let user: Option<User> = self.db
             .fluent()
             .select()
@@ -68,7 +84,7 @@ impl UserRepository for FirestoreRepository {
             .fluent()
             .insert()
             .into(USER_COLLECTION)
-            .document_id(&user.id.to_string())
+            .document_id(user.id.to_string())
             .object(user)
             .execute::<User>()
             .await
@@ -82,7 +98,7 @@ impl UserRepository for FirestoreRepository {
             .fluent()
             .update()
             .in_col(USER_COLLECTION)
-            .document_id(&user.id.to_string())
+            .document_id(user.id.to_string())
             .object(user)
             .execute::<User>()
             .await

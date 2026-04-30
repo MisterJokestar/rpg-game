@@ -42,7 +42,7 @@ mod auth;
 pub fn create_router(state: Arc<AppState>) -> Router {
     let authed = Router::new()
         .route("/character/:character_id", get(get_character))
-        .route("/character/:character_id", post(update_character))
+        .route("/character/update", post(update_character))
         .route("/character/new", post(create_character))
         .route("/game/:game_id", post(update_game))
         .route("/game/new", post(create_game))
