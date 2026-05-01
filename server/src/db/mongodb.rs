@@ -1,3 +1,11 @@
+//! MongoDB database backend.
+//!
+//! [`MongoRepository`] implements [`UserRepository`], [`GameRepository`], and
+//! [`CharacterRepository`] using the official `mongodb` async driver. Enable
+//! this backend by building with `--features mongodb`.
+//!
+//! All three domain collections (`User`, `Game`, `Character`) live in the
+//! `rpg` database.
 use async_trait::async_trait;
 use futures::TryStreamExt;
 use mongodb::{bson::doc, Client, Database};
@@ -12,11 +20,21 @@ const USER_COLLECTION: &str = "User";
 const GAME_COLLECTION: &str = "Game";
 const CHARACTER_COLLECTION: &str = "Character";
 
+/// MongoDB-backed repository that satisfies all three repository traits.
+///
+/// A single instance is created at startup and shared (via `Arc`) across all
+/// route handlers.
 pub struct MongoRepository {
     db: Database,
 }
 
 impl MongoRepository {
+    /// Connect to the MongoDB instance at `uri` and open the `rpg` database.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`AppError::Database`] if the MongoDB client cannot be created
+    /// (e.g., malformed URI).
     pub async fn new(uri: &str) -> Result<Self, AppError> {
         let client = Client::with_uri_str(uri)
             .await

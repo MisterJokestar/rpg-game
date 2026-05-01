@@ -1,11 +1,22 @@
+//! Copper Sides enemy.
+//!
+//! A tanky enemy with a strict attack/defend cycle. On its defend turn it
+//! emits a "CHARGING!" message and its power permanently increases by 1,
+//! making each subsequent attack hit harder. Power also scales with the
+//! current round, so it is stronger in later rounds.
 use crate::{
     enemys::{Enemy, EnemyType},
     models::{
-        Action, 
+        Action,
         game::{EnemyState, Game, Health}
     }
 };
 
+/// A heavily-armoured enemy that alternates attacking and defending.
+///
+/// **Attack/defend cycle:** attacks, then defends (gaining +1 power each
+/// cycle). Initial power is boosted by the current round number, making this
+/// enemy more dangerous in later rounds.
 pub struct CopperSidesEnemy {
     power: i64,
     defense: i64,
@@ -13,6 +24,7 @@ pub struct CopperSidesEnemy {
 }
 
 impl CopperSidesEnemy {
+    /// Create a new CopperSidesEnemy with default stats.
     pub fn new() -> Self {
         CopperSidesEnemy {
             power: 1,
@@ -24,20 +36,20 @@ impl CopperSidesEnemy {
 
 impl Enemy for CopperSidesEnemy {
     fn get_new_state(&mut self) -> EnemyState {
-        EnemyState { 
-            next_turn: None, 
-            state: 2, 
-            health: Health { 
-                current: 50, 
+        EnemyState {
+            next_turn: None,
+            state: 2,
+            health: Health {
+                current: 50,
                 max: 50
-            }, 
-            block: 20, 
+            },
+            block: 20,
             enemy_type: EnemyType::CopperSides
         }
     }
 
     fn next_turn(&mut self, state: &mut Game) -> i64 {
-        // on first call, will adjust initial power depending on round,
+        // On first call, adjust initial power depending on the current round
         if state.enemy_state.state == 2 {
             self.power += state.round;
             state.enemy_state.state = 0;
@@ -45,9 +57,8 @@ impl Enemy for CopperSidesEnemy {
         8
     }
 
-    // This will change.
     fn choose_action(&mut self, state: &mut Game) -> Action {
-        // Enemy will attack on turn, then next turn will block.
+        // Enemy attacks on state 0, then defends and charges on state 1
         if state.enemy_state.state == 0 {
             state.enemy_state.next_turn = Some(state.turn + 1);
             state.enemy_state.state = 1;

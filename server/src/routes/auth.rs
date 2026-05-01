@@ -1,6 +1,9 @@
-//! auth.rs
+//! Authentication route handlers.
 //!
-//! Route handlers for logging in/ creating a new account.
+//! Exposes two public (unauthenticated) endpoints:
+//!
+//! - `POST /create_user` — register a new account.
+//! - `POST /login` — authenticate and receive a fresh session secret.
 use std::sync::Arc;
 use axum::{
     Json, extract::State, http::StatusCode
@@ -15,7 +18,16 @@ use crate::{
     state::AppState
 };
 
-// POST /create_user -> Creates a new user account
+/// `POST /create_user` — register a new user account.
+///
+/// Creates the user record in the database and immediately returns the
+/// credentials the client needs for authenticated requests.
+///
+/// # Errors
+///
+/// - [`AppError::BadRequest`] if the requested username is already taken.
+/// - [`AppError::Internal`] if bcrypt fails to hash the password.
+/// - [`AppError::Database`] if the database write fails.
 pub async fn create_user(
     State(state): State<Arc<AppState>>,
     Json(request): Json<CreateUserRequest>,
@@ -37,7 +49,16 @@ pub async fn create_user(
     }
 }
 
-// POST /login -> Logs in to a users account
+/// `POST /login` — authenticate with a username and password.
+///
+/// On success, rotates the session secret and returns the new credentials.
+/// Clients must update their stored secret after each login.
+///
+/// # Errors
+///
+/// - [`AppError::NotFound`] if no account exists with the given username.
+/// - [`AppError::Unauthorized`] if the password does not match.
+/// - [`AppError::Database`] if the database read or write fails.
 pub async fn login(
     State(state): State<Arc<AppState>>,
     Json(request): Json<LogInRequest>,

@@ -1,6 +1,11 @@
-//! character.rs
+//! Character route handlers.
 //!
-//! Route handlers for characters.
+//! All three handlers require authentication via the `Authorization` header.
+//!
+//! - `GET  /character/:character_id` — fetch a character by ID.
+//! - `POST /character/update`         — replace an existing character record.
+//! - `POST /character/new`            — create a new character and link it to
+//!   a user.
 use std::sync::Arc;
 use axum::{
     Json,
@@ -13,7 +18,12 @@ use crate::{
     state::AppState
 };
 
-// GET /character/:character_id -> Grabs a character by id from the database
+/// `GET /character/:character_id` — fetch a character by its unique ID.
+///
+/// # Errors
+///
+/// - [`AppError::NotFound`] if no character exists with the given ID.
+/// - [`AppError::Database`] if the database read fails.
 pub async fn get_character(
     State(state): State<Arc<AppState>>,
     Path(character_id): Path<String>,
@@ -23,7 +33,12 @@ pub async fn get_character(
     Ok((StatusCode::OK, Json(character)))
 }
 
-// POST /character/update -> Updates a character by id from the database
+/// `POST /character/update` — replace an existing character with the provided
+/// data (matched by ID).
+///
+/// # Errors
+///
+/// - [`AppError::Database`] if the database write fails.
 pub async fn update_character(
     State(state): State<Arc<AppState>>,
     Json(updated_character): Json<Character>,
@@ -32,7 +47,14 @@ pub async fn update_character(
     Ok(StatusCode::OK)
 }
 
-// POST /character/new -> Creates a new character
+/// `POST /character/new` — create a new character and register it on the
+/// owning user's character list.
+///
+/// # Errors
+///
+/// - [`AppError::NotFound`] if the specified `player_id` does not correspond
+///   to an existing user.
+/// - [`AppError::Database`] if any database read or write fails.
 pub async fn create_character(
     State(state): State<Arc<AppState>>,
     Json(request): Json<CreateCharacterRequest>,

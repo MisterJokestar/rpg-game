@@ -1,8 +1,13 @@
-/**
- * Iron Lotus Enemy: enemy that buils up end of turn burn damage
- * @authors: Sam Plemmons and James Wall
- */
-
+//! Iron Lotus enemy — a burn-stacking attacker.
+//!
+//! Iron Lotus applies passive burn damage to the player at the end of every
+//! turn. Burn stacks increase each time Iron Lotus attacks (and ramp up faster
+//! below half health). If the player heals, burn increases by an additional 3,
+//! punishing recovery. Once per encounter, when Iron Lotus's HP falls below
+//! the current burn value, it heals itself and the player simultaneously while
+//! announcing a narrative message.
+//!
+//! Authors: Sam Plemmons and James Wall
 use crate::{
     enemys::{Enemy, EnemyType},
     models::{
@@ -11,6 +16,12 @@ use crate::{
     }
 };
 
+/// An enemy that builds escalating burn damage over time.
+///
+/// **Burn mechanic:** `burn` starts at 0 and increases by 1 each time Iron
+/// Lotus attacks (+2 per attack below half health). At the end of every
+/// player turn, `burn` HP is dealt to the player. Healing increases `burn`
+/// by 3. Speed is fixed at a turn interval of 6.
 pub struct IronLotusEnemy {
     power: i64,
     burn: i64,
@@ -18,6 +29,7 @@ pub struct IronLotusEnemy {
 }
 
 impl IronLotusEnemy {
+    /// Create a new IronLotusEnemy with zero initial burn.
     pub fn new() -> Self {
         IronLotusEnemy {
             power: 4,
@@ -29,21 +41,21 @@ impl IronLotusEnemy {
 
 impl Enemy for IronLotusEnemy {
     fn get_new_state(&mut self) -> EnemyState {
-        EnemyState { 
-            next_turn: None, 
-            state: 1, 
-            health: Health { 
-                current: 40, 
+        EnemyState {
+            next_turn: None,
+            state: 1,
+            health: Health {
+                current: 40,
                 max: 40
-            }, 
-            block: 0, 
+            },
+            block: 0,
             enemy_type: EnemyType::IronLotus
         }
     }
 
     fn next_turn(&mut self, state: &mut Game) -> i64 {
         _ = state;
-        // speed is set to alwasy be 6
+        // speed is always 6
         6
     }
 
@@ -68,7 +80,7 @@ impl Enemy for IronLotusEnemy {
     fn after_players_turn(&mut self, state: &mut Game, prev_action: &Action) {
         // At end of turn, deal burn damage to player
         state.player_state.health.current -= self.burn;
-        // if player healed, increae burn damage
+        // if player healed, increase burn damage
         if let Action::Heal(_) = prev_action {
             self.burn += 3;
             self.set_message = Some(String::from("Do you also wish for the flames to grow?"));

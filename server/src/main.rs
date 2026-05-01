@@ -1,3 +1,18 @@
+//! Entry point for the RPG game server.
+//!
+//! Reads configuration from environment variables, connects to the selected
+//! database backend (Firestore or MongoDB, chosen at compile time via Cargo
+//! features), assembles [`AppState`], mounts the Axum router, and starts the
+//! TCP listener.
+//!
+//! # Database backend selection
+//!
+//! Enable exactly one backend feature when building:
+//!
+//! ```bash
+//! cargo run --features mongodb    # local development
+//! cargo run --features firestore  # production / GCP
+//! ```
 use std::collections::HashMap;
 use std::sync::Arc;
 

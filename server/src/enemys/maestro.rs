@@ -1,16 +1,28 @@
-/**
- * Maestro Enemy: enemy that uses ammo, and as they get closer to their final round they get stronger
- * @authors: Sam Plemmons and James Wall
- */
-
+//! Maestro enemy — an ammo-based ranged attacker.
+//!
+//! Maestro fires up to 6 shots before needing to reload. Each shot is
+//! slightly stronger than the last (power increases as ammo decreases). The
+//! final shot deals double power damage. Reloading uses a *negative* defense
+//! value, which means the "defend" action actually costs Maestro HP instead of
+//! gaining block — representing the vulnerability of reloading. Maestro also
+//! speeds up as its HP falls.
+//!
+//! Authors: Sam Plemmons and James Wall
 use crate::{
     enemys::{Enemy, EnemyType},
     models::{
-        Action, 
+        Action,
         game::{EnemyState, Game, Health}
     }
 };
 
+/// A gunslinging enemy that grows more dangerous as it approaches its last
+/// shot.
+///
+/// **Ammo mechanic:** starts with 6 shots. Each shot reduces ammo by 1 and
+/// deals `power - ammo` damage (so later shots hit harder). When ammo reaches
+/// 1 the final "super shot" fires at `power * 2`. When ammo hits 0 Maestro
+/// reloads (defends with a negative value) and the cycle resets.
 pub struct MaestroEnemy {
     power: i64,
     ammo: i64,
@@ -20,6 +32,7 @@ pub struct MaestroEnemy {
 }
 
 impl MaestroEnemy {
+    /// Create a new MaestroEnemy with default stats.
     pub fn new() -> Self {
         MaestroEnemy {
             power: 8,
@@ -33,20 +46,20 @@ impl MaestroEnemy {
 
 impl Enemy for MaestroEnemy {
     fn get_new_state(&mut self) -> EnemyState {
-        EnemyState { 
-            next_turn: None, 
-            state: 0, 
-            health: Health { 
-                current: 30, 
+        EnemyState {
+            next_turn: None,
+            state: 0,
+            health: Health {
+                current: 30,
                 max: 30
-            }, 
-            block: 0, 
+            },
+            block: 0,
             enemy_type: EnemyType::Maestro
         }
     }
 
     fn next_turn(&mut self, state: &mut Game) -> i64 {
-        // they get faster as their health is lower (or at least that's the goal)
+        // Gets faster as health drops
         if state.enemy_state.health.current < 10 {
             6 - self.speed
         } else if state.enemy_state.health.current < 20 {
@@ -56,7 +69,6 @@ impl Enemy for MaestroEnemy {
         }
     }
 
-    // This will change.
     fn choose_action(&mut self, state: &mut Game) -> Action {
         _ = state;
         // if they still have ammo, use basic attack

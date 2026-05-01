@@ -1,3 +1,8 @@
+//! Firestore database backend.
+//!
+//! [`FirestoreRepository`] implements [`UserRepository`], [`GameRepository`],
+//! and [`CharacterRepository`] using the `firestore` crate's fluent API.
+//! Enable this backend by building with `--features firestore`.
 use async_trait::async_trait;
 use firestore::{FirestoreDb, path, paths};
 
@@ -15,11 +20,21 @@ const USER_COLLECTION: &str = "User";
 const GAME_COLLECTION: &str = "Game";
 const CHARACTER_COLLECTION: &str = "Character";
 
+/// Firestore-backed repository that satisfies all three repository traits.
+///
+/// A single instance is created at startup and shared (via `Arc`) across all
+/// route handlers.
 pub struct FirestoreRepository {
     db: FirestoreDb,
 }
 
 impl FirestoreRepository {
+    /// Connect to the Firestore project identified by `project_id`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`AppError::Database`] if the Firestore client cannot be
+    /// initialised (e.g., invalid project ID or missing GCP credentials).
     pub async fn new(project_id: &str) -> Result<Self, AppError> {
         let db = FirestoreDb::new(project_id)
             .await

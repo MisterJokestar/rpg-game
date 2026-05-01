@@ -1,6 +1,15 @@
-//! session.rs
+//! Game session route handlers.
 //!
-//! Route handlers for game sessions.
+//! These handlers manage the lifecycle of a live, in-memory game session:
+//!
+//! - `POST /session/:game_id`         — start a session (authenticated).
+//! - `POST /session/:game_id/stop`    — stop a session (authenticated).
+//! - `POST /session/:game_id/action`  — send a player action (authenticated).
+//! - `GET  /session/:game_id/stream`  — subscribe to SSE events (public).
+//!
+//! Starting a session spawns two Tokio tasks: a [`Runner`] that drives the
+//! game loop, and a [`Watcher`] that cancels the runner after 15 minutes of
+//! inactivity or when an explicit stop is requested.
 use std::{
     convert::Infallible,
     sync::Arc
@@ -26,8 +35,17 @@ use crate::{
     state::{AppState, GameSession}
 };
 
-// POST /games — builds the runner and watcher for this user, registers the session
-// in AppState and spawns both background tasks
+/// `POST /session/:game_id` — start a live game session for the given game.
+///
+/// Loads the game from the database, constructs a [`Runner`] and [`Watcher`],
+/// registers the session in [`AppState`], then spawns both tasks. Returns the
+/// current game state so the client has an initial snapshot.
+///
+/// # Errors
+///
+/// - [`AppError::NotFound`] if the game or its associated character cannot be
+///   found.
+/// - [`AppError::Database`] if the database reads fail.
 pub async fn start_game(
     State(state): State<Arc<AppState>>,
     Path(game_id): Path<String>,
@@ -78,7 +96,15 @@ pub async fn start_game(
     Ok((StatusCode::CREATED, Json(game)))
 }
 
-// POST /games/:game_id/stop — signal the watcher to cancel the runner
+/// `POST /session/:game_id/stop` — gracefully stop an active session.
+///
+/// Removes the session from [`AppState`] and signals the watcher to cancel
+/// the runner, which will persist the game state before exiting.
+///
+/// # Errors
+///
+/// - [`AppError::NotFound`] if there is no active session for the given game
+///   ID.
 pub async fn stop_game(
     State(state): State<Arc<AppState>>,
     Path(game_id): Path<String>,
@@ -95,20 +121,31 @@ pub async fn stop_game(
     Ok(StatusCode::NO_CONTENT)
 }
 
-// POST /games/:game_id/actions — send a player action to the runner
+/// `POST /session/:game_id/action` — submit a player action for the current
+/// turn.
+///
+/// Resets the watcher's idle timer (keeping the session alive) and forwards
+/// the action to the runner via the session's action channel.
+///
+/// # Errors
+///
+/// - [`AppError::NotFound`] if there is no active session for the given game
+///   ID.
+/// - [`AppError::Internal`] if the action channel has been closed
+///   unexpectedly.
 pub async fn send_action(
     State(state): State<Arc<AppState>>,
     Path(game_id): Path<String>,
     Json(action): Json<Action>,
 ) -> Result<StatusCode, AppError> {
-    // Grab session from state.sessions by user Uuid
+    // Grab session from state.sessions by game id
     let (action_tx, ping) = {
         let sessions = state.sessions.read().await;
         let session = sessions.get(&game_id)
         .ok_or_else(|| AppError::NotFound(format!("No active session with id, '{}'", &game_id)))?;
         (session.action_tx.clone(), session.watcher.ping.clone())
     };
-    // Reset the watchers idle timer, game is still active
+    // Reset the watcher's idle timer; the game is still active
     ping.notify_one();
     // Send the action with action_tx
     action_tx.send(action).await
@@ -116,8 +153,21 @@ pub async fn send_action(
     Ok(StatusCode::ACCEPTED)
 }
 
-// SSE Endpoint
-// This is to register the client as a listener for game updates
+/// `GET /session/:game_id/stream` — subscribe to a Server-Sent Events stream
+/// of game updates.
+///
+/// On connection the handler immediately emits a `"snapshot"` event containing
+/// the current game state, then forwards all subsequent [`crate::models::game::SequencedEvent`]s
+/// from the broadcast channel. Events with a sequence number at or below the
+/// snapshot's sequence number are dropped to avoid duplicates.
+///
+/// A `"lag"` event is emitted if the client falls too far behind the broadcast
+/// buffer.
+///
+/// # Errors
+///
+/// - [`AppError::NotFound`] if there is no active session for the given game
+///   ID.
 pub async fn game_stream(
     State(state): State<Arc<AppState>>,
     Path(game_id): Path<String>,

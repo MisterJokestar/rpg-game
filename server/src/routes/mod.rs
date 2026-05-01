@@ -1,3 +1,15 @@
+//! HTTP router construction.
+//!
+//! [`create_router`] assembles the full Axum [`Router`], splitting routes into
+//! two groups:
+//!
+//! - **Public** – no authentication required (`/create_user`, `/login`,
+//!   `GET /game/:id`, `GET /games`, `GET /session/:id/stream`).
+//! - **Authenticated** – all mutating routes; the [`auth_middleware`] checks
+//!   the `Authorization: <user_id>:<secret>` header before the handler runs.
+//!
+//! CORS is enabled for all origins so that the frontend can reach the API from
+//! any host.
 use axum::{
     Router,
     http::{Method, header::{AUTHORIZATION, CONTENT_TYPE}},
@@ -10,7 +22,7 @@ use crate::{
     middleware::auth::auth_middleware,
     routes::{
         session::{
-            game_stream, 
+            game_stream,
             send_action,
             start_game,
             stop_game,
@@ -39,6 +51,9 @@ mod game;
 mod character;
 mod auth;
 
+/// Build the application [`Router`] with all routes and middleware applied.
+///
+/// The router is intended to be passed directly to `axum::serve`.
 pub fn create_router(state: Arc<AppState>) -> Router {
     let authed = Router::new()
         .route("/character/:character_id", get(get_character))
