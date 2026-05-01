@@ -32,6 +32,7 @@ use crate::{
             get_all_games,
             update_game,
             create_game,
+            get_leaderboard,
         },
         auth::{
             login,
@@ -73,6 +74,7 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route("/login", post(login))
         .route("/game/:game_id", get(get_game))
         .route("/games", get(get_all_games))
+        .route("/leaderboard", get(get_leaderboard))
         .route("/session/:game_id/stream", get(game_stream));
 
     Router::new()

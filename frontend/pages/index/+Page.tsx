@@ -1,6 +1,18 @@
+import { useEffect } from "react";
 import { navigate } from "vike/client/router";
 
 export default function Page() {
+    // If already logged in, navigate stright to dashboard.
+    useEffect(() => {
+        if (
+            localStorage.getItem("secret") &&
+            localStorage.getItem("userId") &&
+            localStorage.getItem("username")
+        ) {
+            navigate("/dashboard");
+        }
+    }, []);
+
     return (
         <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center p-8">
             <h1 className="text-4xl font-bold text-center mb-2">Welcome</h1>

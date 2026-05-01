@@ -246,6 +246,15 @@ pub struct SequencedEvent {
     pub event: GameEvent,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct LeaderboardEntry {
+    pub player_name: String,
+    pub wins: i64,
+    pub rounds: i64,
+    pub damage_dealt: i64,
+    pub enemies_defeated: i64,
+}
+
 /// Request body for the `POST /game/new` endpoint.
 #[derive(Debug, Clone, Deserialize)]
 pub struct CreateGameRequest {
@@ -294,5 +303,17 @@ impl Game {
             max: 100
         };
         self.enemy_state = get_random_enemy().get_new_state();
+    }
+}
+
+impl LeaderboardEntry {
+    pub fn new(player_name: String) -> Self {
+        LeaderboardEntry {
+            player_name,
+            wins: 0,
+            rounds: 0,
+            damage_dealt: 0,
+            enemies_defeated: 0
+        }
     }
 }

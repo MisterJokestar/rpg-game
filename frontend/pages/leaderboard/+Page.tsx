@@ -1,37 +1,7 @@
 import {useEffect, useState} from "react";
-import {LeaderBoardEntry, LeaderBoardRaw} from "../../models/game";
-import {cloudFunctions} from "../../axiosConfig";
+import {apiClient} from "../../axiosConfig";
 import { navigate } from "vike/client/router";
-
-async function get_leaderboard(): Promise<LeaderBoardRaw[]> {
-    let response = await cloudFunctions.post('/getLeaderboard');
-    console.log(response.data);
-    return response.data.leaderboard;
-}
-
-function parse_leaderboard(data: LeaderBoardRaw[]): LeaderBoardEntry[] {
-    // group entries by player_name
-    const grouped = data.reduce((acc, entry) => {
-        // if player hasn't been seen yet, init their entry
-        if (!acc[entry.player_name]) {
-            acc[entry.player_name] = {
-                player_name: entry.player_name,
-                games_won: 0,
-                rounds_survived: 0,
-                damage_dealt:0,
-                enemies_defeated: 0,
-            };
-        }
-    // sum the data for each player
-    if (entry.win === true) acc[entry.player_name].games_won += 1;
-    acc[entry.player_name].damage_dealt += entry.damage_dealt;
-    acc[entry.player_name].enemies_defeated += entry.enemies_defeated;
-    acc[entry.player_name].rounds_survived += entry.round;
-    return acc;
-    }, {} as Record<string, LeaderBoardEntry>);
-    // convert the grouped players back into an array
-    return Object.values(grouped);
-}
+import { LeaderBoardEntry } from "../../models/api";
 
 // the data the leaderboard will be sorted-on
 type SortKey = "games_won" | "rounds_survived" | "damage_dealt" | "enemies_defeated";
@@ -50,8 +20,13 @@ export default function Page() {
     // fetch and parse the leaderboard on page load
     useEffect(() => {
         const fetchData = async () => {
-            const data = await get_leaderboard();
-            setEntries(parse_leaderboard(data));
+            try {
+                let response = await apiClient.post('/leaderboard');
+                let leaderboard: LeaderBoardEntry[] = response.data;
+                setEntries(leaderboard);
+            } catch (error) {
+                console.log(error);
+            }
         }
         fetchData();
     }, []);
@@ -71,8 +46,8 @@ export default function Page() {
     // calculates a players total score based on whichever sort keys are checked
     const player_score = (p: LeaderBoardEntry) => {
         let total = 0;
-        if (sortBy.games_won) total += p.games_won;
-        if (sortBy.rounds_survived) total += p.rounds_survived;
+        if (sortBy.games_won) total += p.wins;
+        if (sortBy.rounds_survived) total += p.rounds;
         if (sortBy.damage_dealt) total += p.damage_dealt;
         if (sortBy.enemies_defeated) total += p.enemies_defeated;
         return total;
@@ -153,8 +128,8 @@ export default function Page() {
                             >
                                 <td className="px-6 py-4 font-bold text-yellow-400">#{getRank(i)}</td>
                                 <td className="px-6 py-4 font-medium">{p.player_name}</td>
-                                <td className="px-6 py-4">{p.games_won.toLocaleString()}</td>
-                                <td className="px-6 py-4">{p.rounds_survived.toLocaleString()}</td>
+                                <td className="px-6 py-4">{p.wins.toLocaleString()}</td>
+                                <td className="px-6 py-4">{p.rounds.toLocaleString()}</td>
                                 <td className="px-6 py-4">{p.damage_dealt.toLocaleString()}</td>
                                 <td className="px-6 py-4">{p.enemies_defeated.toLocaleString()}</td>
                             </tr>

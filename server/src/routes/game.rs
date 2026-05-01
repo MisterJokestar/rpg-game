@@ -7,7 +7,7 @@
 //! - `GET  /games`          — list all games (public).
 //! - `POST /game/:game_id`  — replace an existing game record (authenticated).
 //! - `POST /game/new`       — create a new game (authenticated).
-use std::sync::Arc;
+use std::{collections::{HashMap, hash_map::Entry}, sync::Arc};
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -15,7 +15,7 @@ use axum::{
 };
 use crate::{
     error::AppError,
-    models::game::{CreateGameRequest, Game},
+    models::game::{CreateGameRequest, Game, LeaderboardEntry},
     state::AppState
 };
 
@@ -81,4 +81,38 @@ pub async fn create_game(
     character.games.push(new_game.id.clone());
     state.characters.update_character(&character).await?;
     Ok(StatusCode::CREATED)
+}
+
+pub async fn get_leaderboard(
+    State(state): State<Arc<AppState>>
+) -> Result<(StatusCode, Json<Vec<LeaderboardEntry>>), AppError> {
+    let games = state.games.get_all_games().await?;
+    let mut leaderboard: HashMap<String, LeaderboardEntry> = HashMap::new();
+    for game in games {
+        // Check if player has an entry in the leaderboard
+        if let Entry::Vacant(entry) = leaderboard.entry(game.player_state.player_id.clone()) {
+            match state.users.get_user_by_id(game.player_state.player_id).await? {
+                // find user to add new entry to leaderboard
+                Some(user) => {
+                    let mut lb = LeaderboardEntry::new(user.username);
+                    if game.win == Some(true) {lb.wins = 1;}
+                    lb.rounds = game.round;
+                    lb.damage_dealt = game.player_state.damage_dealt;
+                    lb.enemies_defeated = game.enemies_defeated.len() as i64;
+                    entry.insert(lb);
+                }
+                // If user does not exist for some reason, just ignore it
+                None => {continue;}
+            }
+        } else {
+            // Add values to leaderboard entry for existing player
+            let lb = leaderboard.get_mut(&game.player_state.player_id).unwrap();
+            if game.win == Some(true) {lb.wins += 1;}
+            lb.rounds += game.round;
+            lb.damage_dealt += game.player_state.damage_dealt;
+            lb.enemies_defeated += game.enemies_defeated.len() as i64;
+        }
+    }
+    // return only the leaderboard entries.
+    Ok((StatusCode::OK, Json(leaderboard.into_values().collect())))
 }

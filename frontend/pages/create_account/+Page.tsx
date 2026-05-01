@@ -1,23 +1,7 @@
 import { ChangeEvent, useState } from "react";
 import { navigate } from "vike/client/router";
-import { cloudFunctions } from "../../axiosConfig";
-
-// Function to make the call to the cloud function for getting the game
-async function signup(username: String, password: String) {
-    let response = await cloudFunctions.post(
-        '/createUser', // the URL to the cloud function
-        {
-            "username": username,
-            "password": password
-        });
-    return response;
-}
-
-type logn_response = {
-    userId: string,
-    secret: string,
-    success: boolean,
-}
+import { apiClient } from "../../axiosConfig";
+import { CreateUserRequest, LogInResponse } from "../../models/api";
 
 export default function Page() {
     const [username, setUsername] = useState<string>(""); // entered username stored in username
@@ -34,22 +18,25 @@ export default function Page() {
             setError("Please enter a username and password");
             return;
         }
-
-        const response = await signup(username, password);
-        console.log(response.data);
-        let data: logn_response = response.data;
-
-        if (data.success) {
-            // save secret value and user id to local storage
+        try {
+            let request: CreateUserRequest = {
+                username: username,
+                password: password
+            }
+            let response = await apiClient.post(
+                '/create_user', // the URL to the cloud function
+                request
+            );
+            let data: LogInResponse = response.data;
             localStorage.setItem("secret", data.secret);
-            localStorage.setItem("userId", data.userId);
+            localStorage.setItem("userId", data.user_id);
             localStorage.setItem("username", username);
-            navigate("/dashboard") // redirect to dashboard
-        } else {
+            navigate("/dashboard"); // redirect to dashboard
+        } catch (error) {
             setError("Incorrect username or password");
-            return;
+        } finally {
+            setLoading(false);
         }
-        setLoading(false); // Button no longer disabled
     }
 
     function handleUsernameChange(e: ChangeEvent<HTMLInputElement>) {

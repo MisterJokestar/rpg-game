@@ -13,8 +13,5 @@ apiClient.interceptors.request.use((config) => {
     return config;
 });
 
-export const cloudFunctions = axios.create({
-  baseURL: "https://cloud-functions-91972588391.us-central1.run.app",
-});
 // HOW TO USE
 // const response = await apiClient.get("/games", {request_body});

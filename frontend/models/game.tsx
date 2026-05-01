@@ -1,6 +1,12 @@
-export type Health = {
-    current: number;
-    max: number
+export type Game = {
+    id: string;
+    complete: boolean;
+    win: boolean | null;
+    round: number;
+    turn: number;
+    player_state: PlayerState;
+    enemy_state: EnemyState;
+    enemies_defeated: Map<string, number>;
 };
 
 export type PlayerState = {
@@ -24,15 +30,9 @@ export type EnemyState = {
     enemy_type: string;
 };
 
-export type Game = {
-    id: string;
-    complete: boolean;
-    win: boolean | null;
-    round: number;
-    turn: number;
-    enemies_defeated: Map<string, number>;
-    player_state: PlayerState;
-    enemy_state: EnemyState;
+export type Health = {
+    current: number;
+    max: number
 };
 
 export type Action =
@@ -48,7 +48,8 @@ export type Stats = {
 }
 
 export type Character = {
-    characterId: string;
+    id: string;
+    owner: string;
     name: string;
     stats: Stats;
     games: string[];
@@ -59,31 +60,7 @@ export type User = {
     username: string;
     password_hash: string;
     secret: string;
-    characters: Character[];
-}
-
-// add game_id as a string
-export type GameStats = {
-    game_id: string;
-    name: string;
-    win: boolean;
-    round: number;
-    turn: number;
-    status: boolean;
-    stats: Stats;
-    player_state: {
-        damage_blocked: number;
-        damage_dealt: number;
-        damage_dodged: number;
-        damage_healed: number;
-        damage_taken: number;
-        health: Health;
-    }
-    enemy_state: {
-        health: Health;
-        type: string;
-    }
-    enemies_defeated: Map<string, number>;
+    characters: String[];
 }
 
 export type LeaderBoardEntry = {
