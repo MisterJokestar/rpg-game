@@ -41,7 +41,8 @@ server/
 │       ├── mod.rs
 │       └── auth.rs          # Auth middleware (currently pass-through)
 ├── .env.example             # Template for local environment variables
-├── docker-compose.yml       # Spins up a local MongoDB container
+├── Dockerfile               # Multi-stage build for the server image
+├── docker-compose.yml       # Spins up MongoDB + server containers
 └── Cargo.toml
 ```
 
@@ -73,18 +74,27 @@ Key variables (full list in `.env.example`):
 | `PORT` | `5000` | Listen port |
 | `RUST_LOG` | `server=debug,tower_http=debug` | Log verbosity |
 
-### 2. Start MongoDB
+### 2. Start the stack
+
+**Option A — fully containerized (recommended):**
 
 ```bash
-docker compose up -d
+docker compose up -d        # starts both MongoDB and the server
+# or
+podman-compose up -d
 ```
 
-This starts a MongoDB container at `localhost:27017` with a persistent volume (`mongo-data`).
-
-### 3. Run the server
+MongoDB data is persisted in the `mongo-data` volume. To rebuild only the server without touching the database:
 
 ```bash
-cargo run
+docker compose up server --build
+```
+
+**Option B — MongoDB in Docker, server via cargo:**
+
+```bash
+docker compose up mongo -d  # start only the MongoDB container
+cargo run --features mongodb
 ```
 
 The server listens on `http://0.0.0.0:5000` by default.
