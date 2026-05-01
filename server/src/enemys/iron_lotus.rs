@@ -7,7 +7,7 @@
 //! the current burn value, it heals itself and the player simultaneously while
 //! announcing a narrative message.
 //!
-//! Authors: Sam Plemmons and James Wall
+//! Authors: Sam Plemmons
 use crate::{
     enemys::{Enemy, EnemyType},
     models::{

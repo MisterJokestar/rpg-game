@@ -5,6 +5,7 @@
 //! Enable this backend by building with `--features firestore`.
 use async_trait::async_trait;
 use firestore::{FirestoreDb, path, paths};
+use futures::StreamExt;
 
 use crate::{
     db::{CharacterRepository, GameRepository, UserRepository},
@@ -209,6 +210,27 @@ impl CharacterRepository for FirestoreRepository {
             .map_err(|e| AppError::Database(e.to_string()))?;
 
         Ok(character)
+    }
+
+    async fn get_characters(
+        &self,
+        character_ids: Vec<String>
+    ) -> Result<Vec<Character>, AppError> {
+        let stream = self.db
+            .fluent()
+            .select()
+            .by_id_in(CHARACTER_COLLECTION)
+            .obj::<Character>()
+            .batch(character_ids)
+            .await
+            .map_err(|e| AppError::Database(e.to_string()))?;
+
+        let characters: Vec<Character> = stream
+            .filter_map(|(_id, maybe_char)| async move { maybe_char })
+            .collect()
+            .await;
+
+        Ok(characters)
     }
 
     async fn update_character(

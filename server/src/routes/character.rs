@@ -18,6 +18,22 @@ use crate::{
     state::AppState
 };
 
+/// `GET /character/all/:user_id` — fetch user's characters.
+///
+/// # Errors
+///
+/// - [`AppError::NotFound`] if no user exists with the given ID.
+/// - [`AppError::Database`] if the database read fails.
+pub async fn get_characters(
+    State(state): State<Arc<AppState>>,
+    Path(user_id): Path<String>,
+) -> Result<(StatusCode, Json<Vec<Character>>), AppError> {
+    let user = state.users.get_user_by_id(user_id.clone()).await?
+        .ok_or_else(|| AppError::NotFound(format!("User with id, {}, Does not exist.", user_id)))?;
+    let characters = state.characters.get_characters(user.characters).await?;
+    Ok((StatusCode::OK, Json(characters)))
+}
+
 /// `GET /character/:character_id` — fetch a character by its unique ID.
 ///
 /// # Errors

@@ -49,6 +49,8 @@ pub trait GameRepository: Send + Sync {
 pub trait CharacterRepository: Send + Sync {
     /// Fetch a character by its unique ID, returning `None` if not found.
     async fn get_character(&self, character_id: String) -> Result<Option<Character>, AppError>;
+    /// Fetch all characters from ids in an array.
+    async fn get_characters(&self, character_ids: Vec<String>) -> Result<Vec<Character>, AppError>;
     /// Replace an existing character record (matched by ID) with the provided
     /// data.
     async fn update_character(&self, character: &Character) -> Result<(), AppError>;

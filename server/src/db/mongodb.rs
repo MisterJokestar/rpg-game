@@ -155,6 +155,18 @@ impl CharacterRepository for MongoRepository {
             .map_err(|e| AppError::Database(e.to_string()))
     }
 
+    async fn get_characters(&self, character_ids: Vec<String>) -> Result<Vec<Character>, AppError> {
+        let collection = self.db.collection::<Character>(CHARACTER_COLLECTION);
+        let cursor = collection
+            .find(doc! { "_id": { "$in": &character_ids } })
+            .await
+            .map_err(|e| AppError::Database(e.to_string()))?;
+        cursor
+            .try_collect()
+            .await
+            .map_err(|e| AppError::Database(e.to_string()))
+    }
+
     async fn update_character(&self, character: &Character) -> Result<(), AppError> {
         let collection = self.db.collection::<Character>(CHARACTER_COLLECTION);
         collection

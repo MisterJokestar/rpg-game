@@ -7,7 +7,7 @@
 //! gaining block — representing the vulnerability of reloading. Maestro also
 //! speeds up as its HP falls.
 //!
-//! Authors: Sam Plemmons and James Wall
+//! Authors: Sam Plemmons
 use crate::{
     enemys::{Enemy, EnemyType},
     models::{

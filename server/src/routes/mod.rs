@@ -39,6 +39,7 @@ use crate::{
         },
         character::{
             get_character,
+            get_characters,
             update_character,
             create_character,
         },
@@ -56,6 +57,7 @@ mod auth;
 /// The router is intended to be passed directly to `axum::serve`.
 pub fn create_router(state: Arc<AppState>) -> Router {
     let authed = Router::new()
+        .route("/character/all/:user_id", get(get_characters))
         .route("/character/:character_id", get(get_character))
         .route("/character/update", post(update_character))
         .route("/character/new", post(create_character))
