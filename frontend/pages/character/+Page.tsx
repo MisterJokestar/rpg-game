@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Character } from "../../models/game";
-import { cloudFunctions } from "../../axiosConfig";
+import { apiClient } from "../../axiosConfig";
 import characterImg from "../../assets/Character.png";
 import { navigate } from "vike/client/router";
+import { CreateCharacterRequest, CreateGameRequest } from "../../models/api";
 
 export default function Page() {
     const characterIdRef = useRef<String | null>(null);
@@ -24,7 +25,8 @@ export default function Page() {
             setTotalPoints(18);
             setUnusedPoints(15);
             let new_character: Character = {
-                characterId: "",
+                id: "",
+                owner: user_id ? user_id : "",
                 name: "",
                 stats: {
                     power: 1,
@@ -44,13 +46,8 @@ export default function Page() {
     async function grab_character(user_id: string | null, secret: string | null) {
         try {
             if (user_id && secret) {
-                let response = await cloudFunctions.post(
-                    '/getCharacter', // singular
-                    {
-                        "userId": user_id,
-                        "secret": secret,
-                        "characterId": characterIdRef.current,
-                    }
+                let response = await apiClient.get(
+                    `/character/${characterIdRef.current}`
                 );
                 let res_character: Character = response.data.character;
                 setCharacter(res_character);
@@ -67,25 +64,27 @@ export default function Page() {
         let secret = localStorage.getItem("secret");
 
         try {
-            if (user_id && secret) {
-                let response = await cloudFunctions.post(
-                    '/createCharacter', // singular
-                    {
-                        "userId": user_id,
-                        "secret": secret,
-                        "name": character?.name,
-                        "defense": character?.stats.defense,
-                        "power": character?.stats.power,
-                        "speed": character?.stats.speed,
-                    }
+            if (user_id && secret && character) {
+                let request: CreateCharacterRequest = {
+            	    player_id: user_id,
+            	    character_name: character.name,
+            	    power: character.stats.power,
+            	    speed: character.stats.speed,
+            	    defense: character.stats.defense
+                }
+                let response = await apiClient.post(
+                    '/character/new',
+                    request
                 );
-                characterIdRef.current = response.data.characterId;
+                characterIdRef.current = response.data.character_id;
+                navigate("/dashboard");
+            } else {
+                console.log("ERROR: Missing User Id, Secret, or Character.");
             }
-            navigate("/dashboard");
         } catch (error) {
             console.log(error);
         }
-    }    
+    }
 
     async function update_character() {
         let user_id = localStorage.getItem("userId");
@@ -93,17 +92,9 @@ export default function Page() {
 
         try {
             if (user_id && secret) {
-                await cloudFunctions.post(
-                    '/updateCharacter', // singular
-                    {
-                        "userId": user_id,
-                        "secret": secret,
-                        "characterId": characterIdRef.current,
-                        "name": character?.name,
-                        "defense": character?.stats.defense,
-                        "power": character?.stats.power,
-                        "speed": character?.stats.speed,
-                    }
+                await apiClient.post(
+                    '/character/update',
+                    character
                 );
             }
         } catch (error) {
@@ -116,16 +107,16 @@ export default function Page() {
         let secret = localStorage.getItem("secret");
 
         try {
-            if (user_id && secret) {
-                let response = await cloudFunctions.post(
-                    '/createGame', // singular
-                    {
-                        "userId": user_id,
-                        "secret": secret,
-                        "characterId": characterIdRef.current,
-                    }
+            if (user_id && secret && character) {
+                let request: CreateGameRequest = {
+                    player_id: user_id,
+                    character_id: character.name
+                }
+                let response = await apiClient.post(
+                    '/game/new',
+                    request
                 );
-                let game_id = response.data.gameId;
+                let game_id = response.data.game_id;
                 navigate(`/game_session?game_id=${game_id}`);
             }
         } catch (error) {

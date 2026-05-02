@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Character } from "../../models/game"
-import { cloudFunctions } from "../../axiosConfig";
+import { apiClient } from "../../axiosConfig";
 import { navigate } from "vike/client/router";
 
 export default function Page() {
@@ -18,14 +18,10 @@ export default function Page() {
 
         try {
             if (user_id && secret) {
-                let response = await cloudFunctions.post(
-                    '/getCharacters',
-                    {
-                        "userId": user_id,
-                        "secret": secret
-                    }
+                let response = await apiClient.get(
+                    `/character/all/${user_id}`
                 );
-                let res_characters: Character[] = response.data.characters;
+                let res_characters: Character[] = response.data;
                 setCharacters(res_characters);
             }
         } catch (error) {
@@ -45,9 +41,9 @@ export default function Page() {
                 <ul className="mt-6 space-y-3">
                     {characters.map((c) => (
                         <li 
-                            key={c.characterId}
+                            key={c.id}
                             className="bg-gray-800 rounded-xl p-4 flex flex-col gap-2"
-                            onClick={() => {navigate(`/character?character_id=${c.characterId}`);}}
+                            onClick={() => {navigate(`/character?character_id=${c.id}`);}}
                         >
                             <span className="text-xl font-semibold">{c.name}</span>
                             <div className="flex gap-4 text-sm text-gray-300">

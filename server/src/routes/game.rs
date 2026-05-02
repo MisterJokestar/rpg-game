@@ -15,7 +15,7 @@ use axum::{
 };
 use crate::{
     error::AppError,
-    models::game::{CreateGameRequest, Game, LeaderboardEntry},
+    models::game::{CreateGameRequest, CreateGameResponse, Game, LeaderboardEntry},
     state::AppState
 };
 
@@ -73,14 +73,17 @@ pub async fn update_game(
 pub async fn create_game(
     State(state): State<Arc<AppState>>,
     Json(request): Json<CreateGameRequest>,
-) -> Result<StatusCode, AppError> {
+) -> Result<(StatusCode, Json<CreateGameResponse>), AppError> {
     let new_game = Game::new(request.player_id, request.character_id.clone());
     let mut character = state.characters.get_character(request.character_id.clone()).await?
             .ok_or_else(|| AppError::NotFound(format!("Character Not Found with id {}", request.character_id)))?;
     state.games.create_game(&new_game).await?;
     character.games.push(new_game.id.clone());
     state.characters.update_character(&character).await?;
-    Ok(StatusCode::CREATED)
+    let response = CreateGameResponse {
+        game_id: new_game.id
+    };
+    Ok((StatusCode::CREATED, Json(response)))
 }
 
 pub async fn get_leaderboard(

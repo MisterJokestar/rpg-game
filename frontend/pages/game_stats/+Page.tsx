@@ -1,52 +1,53 @@
-import {GameStats} from "../../models/game";
+import {Character, Game} from "../../models/game";
 import { useState, useEffect } from "react";
-import {cloudFunctions} from "../../axiosConfig";
+import { apiClient } from "../../axiosConfig";
 import { navigate } from "vike/client/router";
 
-// Function to make the call to the cloud function for getting the game
-async function get_stats(gameId: string) {
-    let response = await cloudFunctions.post(
-        '/getStats',
-        {
-            gameId: gameId
-        }
-    );
-    console.log(response.data);
-    return response.data as GameStats
-}
-
-// http://localhost:3000/game_stats?game-id=KLZoO917fyxVAWBRZkCb
 export default function Page() {
 
-    const [gameStats, setGameStats] = useState<GameStats | null>(null);
+    const [game, setGame] = useState<Game | null>(null);
+    const [character, setCharacter] = useState<Character | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
             const id = new URLSearchParams(window.location.search).get("game-id");
             if (id) {
-                setGameStats(await get_stats(id));
+                try {
+				    let game_response = await apiClient.get(
+				        `/game/${id}`
+				    );
+				    let game_data: Game = game_response.data;
+                    setGame(game_data);
+                    let character_response = await apiClient.get(
+                        `/character/${game_data.player_state.character_id}`
+                    );
+                    let character_data: Character = character_response.data;
+                    setCharacter(character_data);
+                } catch (error) {
+                    console.log(error);
+                }
             }
 
         }
         fetchData();
     }, []);
 
-        const game_id = gameStats?.game_id;
-        const character_name = gameStats?.name;
-        const player_stats = gameStats?.stats;
-        //const win = gameStats?.win;
-        const round = gameStats?.round;
-        const turn = gameStats?.turn;
-        const complete = gameStats?.status; // has the player died
-        const player_state = gameStats?.player_state
-        const enemy_state = gameStats?.enemy_state;
-        const enemies_defeated = gameStats?.enemies_defeated;
+        const game_id = game?.id;
+        const character_name = character?.name;
+        const player_stats = character?.stats;
+        const win = game?.win;
+        const round = game?.round;
+        const turn = game?.turn;
+        const complete = game?.complete; // has the player died
+        const player_state = game?.player_state
+        const enemy_state = game?.enemy_state;
+        const enemies_defeated = game?.enemies_defeated;
 
         const patch_win = player_state && player_state.health.current === 0 ? false :
             player_state && round && round > 3 ? true : null;
 
 
-    if (!gameStats){
+    if (!game && !character){
         return(
             <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
                 <p className="text-gray-400">Loading...</p>
@@ -130,7 +131,7 @@ export default function Page() {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <p className="text-gray-400 text-sm">Type</p>
-                                <p className="text-xl font-bold">{enemy_state!.type}</p>
+                                <p className="text-xl font-bold">{enemy_state!.enemy_type}</p>
                             </div>
                             <div>
                                 <p className="text-gray-400 text-sm">Health</p>

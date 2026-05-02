@@ -264,6 +264,11 @@ pub struct CreateGameRequest {
     pub character_id: String,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct CreateGameResponse {
+    pub game_id: String,
+}
+
 impl Game {
     /// Create a new game for the given player and character with starting HP
     /// of 100, a randomly selected first enemy, and all counters zeroed.

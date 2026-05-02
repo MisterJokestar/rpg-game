@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { navigate } from "vike/client/router";
-import { apiClient, cloudFunctions } from "../../axiosConfig";
+import { apiClient } from "../../axiosConfig";
 import { Game, Action, Character } from "../../models/game";
 import characterImg from "../../assets/Character.png";
 import copperSidesImg from "../../assets/CopperSides.png";
@@ -89,8 +89,8 @@ export default function Page() {
           const secret = localStorage.getItem("secret");
           const characterId = snapshotGame.player_state.character_id;
           if (userId && secret && characterId) {
-            cloudFunctions.post('/getCharacter', { userId, secret, characterId })
-              .then(res => setCharacter(res.data.character))
+            apiClient.get(`/character/${characterId}`)
+              .then(res => setCharacter(res.data as Character))
               .catch(err => console.warn('Failed to fetch character:', err));
           }
         });

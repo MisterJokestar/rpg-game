@@ -56,6 +56,11 @@ pub struct CreateCharacterRequest {
     pub defense: i64
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct CreateCharacterResponse {
+    pub character_id: String,
+}
+
 impl Character {
     /// Construct a new character with a generated UUID v7 identifier.
     pub fn new(

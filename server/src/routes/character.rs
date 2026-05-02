@@ -14,7 +14,7 @@ use axum::{
 };
 use crate::{
     error::AppError,
-    models::character::{Character, CreateCharacterRequest},
+    models::character::{Character, CreateCharacterRequest, CreateCharacterResponse},
     state::AppState
 };
 
@@ -74,7 +74,7 @@ pub async fn update_character(
 pub async fn create_character(
     State(state): State<Arc<AppState>>,
     Json(request): Json<CreateCharacterRequest>,
-) -> Result<StatusCode, AppError> {
+) -> Result<(StatusCode, Json<CreateCharacterResponse>), AppError> {
     let character = Character::new(
         request.player_id.clone(),
         request.character_name,
@@ -85,7 +85,10 @@ pub async fn create_character(
     let mut player = state.users.get_user_by_id(request.player_id.clone()).await?
         .ok_or_else(|| AppError::NotFound(format!("User with id, {}, Does Not Exist.", request.player_id)))?;
     state.characters.create_character(&character).await?;
-    player.characters.push(character.id);
+    player.characters.push(character.id.clone());
     state.users.update_user(&player).await?;
-    Ok(StatusCode::CREATED)
+    let response = CreateCharacterResponse {
+        character_id: character.id,
+    };
+    Ok((StatusCode::CREATED, Json(response)))
 }

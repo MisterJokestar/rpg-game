@@ -1,4 +1,3 @@
-
 export type CreateUserRequest = {
     username: string;
     password: string;
@@ -21,7 +20,7 @@ export type CreateGameRequest = {
 
 export type CreateCharacterRequest = {
     player_id: string;
-    character_id: string;
+    character_name: string;
     power: number;
     speed: number;
     defense: number;
