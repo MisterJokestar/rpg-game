@@ -64,7 +64,6 @@ Key variables (full list in `.env.example`):
 
 | Variable | Default | Description |
 |---|---|---|
-| `DATABASE_BACKEND` | `mongodb` | `mongodb` for local dev, `firestore` for production |
 | `MONGODB_URI` | `mongodb://localhost:27017` | MongoDB connection string |
 | `MONGODB_DB_NAME` | `app_db` | Database name |
 | `MONGO_ROOT_USERNAME` | `admin` | Docker container root user |
@@ -101,13 +100,11 @@ The server listens on `http://0.0.0.0:5000` by default.
 
 ### Switching to Firestore (production)
 
-1. Set up [Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc) (`gcloud auth application-default login` or a service account key in `GOOGLE_APPLICATION_CREDENTIALS`).
-2. In `.env`, set:
-   ```
-   DATABASE_BACKEND=firestore
-   FIRESTORE_PROJECT_ID=your-gcp-project-id
-   ```
-3. Deploy the Firestore rules and indexes from the `firestore/` folder (see `firestore/README.md`).
+Run with the `firestore` feature flag:
+```bash
+cargo run --features firestore
+```
+Ensure `FIRESTORE_PROJECT_ID` is set in `.env` and Application Default Credentials are configured (`gcloud auth application-default login` or `GOOGLE_APPLICATION_CREDENTIALS`).
 
 ## Current State and TODOs
 

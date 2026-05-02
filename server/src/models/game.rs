@@ -218,6 +218,34 @@ impl Combatant for EnemyState {
     }
 }
 
+/// API response shape for a game — always serialises the ID as `"id"`.
+#[derive(Debug, Clone, Serialize)]
+pub struct GameResponse {
+    pub id: String,
+    pub complete: bool,
+    pub win: Option<bool>,
+    pub round: i64,
+    pub turn: i64,
+    pub player_state: PlayerState,
+    pub enemy_state: EnemyState,
+    pub enemies_defeated: HashMap<EnemyType, i64>,
+}
+
+impl From<Game> for GameResponse {
+    fn from(g: Game) -> Self {
+        GameResponse {
+            id: g.id,
+            complete: g.complete,
+            win: g.win,
+            round: g.round,
+            turn: g.turn,
+            player_state: g.player_state,
+            enemy_state: g.enemy_state,
+            enemies_defeated: g.enemies_defeated,
+        }
+    }
+}
+
 /// An event broadcast to SSE subscribers during a live game session.
 #[derive(Debug, Clone, Serialize)]
 pub enum GameEvent {
@@ -231,6 +259,26 @@ pub enum GameEvent {
     /// A narrative or status message from the game engine (e.g., enemy
     /// ability announcements).
     GameMessage(String),
+}
+
+/// Serialisation-safe version of [`GameEvent`] for SSE output.
+#[derive(Debug, Clone, Serialize)]
+pub enum GameEventResponse {
+    TurnResolved(GameResponse),
+    GameOver(GameResponse),
+    GameStopped(GameResponse),
+    GameMessage(String),
+}
+
+impl From<GameEvent> for GameEventResponse {
+    fn from(e: GameEvent) -> Self {
+        match e {
+            GameEvent::TurnResolved(g) => GameEventResponse::TurnResolved(GameResponse::from(g)),
+            GameEvent::GameOver(g)     => GameEventResponse::GameOver(GameResponse::from(g)),
+            GameEvent::GameStopped(g)  => GameEventResponse::GameStopped(GameResponse::from(g)),
+            GameEvent::GameMessage(s)  => GameEventResponse::GameMessage(s),
+        }
+    }
 }
 
 /// A [`GameEvent`] tagged with a monotonically-increasing sequence number.

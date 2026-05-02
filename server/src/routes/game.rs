@@ -15,7 +15,7 @@ use axum::{
 };
 use crate::{
     error::AppError,
-    models::game::{CreateGameRequest, CreateGameResponse, Game, LeaderboardEntry},
+    models::game::{CreateGameRequest, CreateGameResponse, Game, GameResponse, LeaderboardEntry},
     state::AppState
 };
 
@@ -28,10 +28,10 @@ use crate::{
 pub async fn get_game(
     State(state): State<Arc<AppState>>,
     Path(game_id): Path<String>,
-) -> Result<(StatusCode, Json<Game>), AppError> {
+) -> Result<(StatusCode, Json<GameResponse>), AppError> {
     let game = state.games.get_game(game_id.clone()).await?
         .ok_or_else(|| AppError::NotFound(format!("Game with id, {}, Does not exist.", game_id)))?;
-    Ok((StatusCode::OK, Json(game)))
+    Ok((StatusCode::OK, Json(GameResponse::from(game))))
 }
 
 /// `GET /games` — retrieve all game records.
@@ -41,9 +41,9 @@ pub async fn get_game(
 /// - [`AppError::Database`] if the database read fails.
 pub async fn get_all_games(
     State(state): State<Arc<AppState>>,
-) -> Result<(StatusCode, Json<Vec<Game>>), AppError> {
+) -> Result<(StatusCode, Json<Vec<GameResponse>>), AppError> {
     let games = state.games.get_all_games().await?;
-    Ok((StatusCode::OK, Json(games)))
+    Ok((StatusCode::OK, Json(games.into_iter().map(GameResponse::from).collect())))
 }
 
 /// `POST /game/:game_id` — replace a game record with the provided body.

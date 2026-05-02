@@ -56,6 +56,29 @@ pub struct CreateCharacterRequest {
     pub defense: i64
 }
 
+/// API response shape for a character — always serialises the ID as `"id"`
+/// regardless of the active database backend.
+#[derive(Debug, Clone, Serialize)]
+pub struct CharacterResponse {
+    pub id: String,
+    pub owner: String,
+    pub name: String,
+    pub stats: Stats,
+    pub games: Vec<String>,
+}
+
+impl From<Character> for CharacterResponse {
+    fn from(c: Character) -> Self {
+        CharacterResponse {
+            id: c.id,
+            owner: c.owner,
+            name: c.name,
+            stats: c.stats,
+            games: c.games,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct CreateCharacterResponse {
     pub character_id: String,

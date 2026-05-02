@@ -5,6 +5,5 @@ import vike from "vike/plugin";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [vike(), react(), tailwindcss()],
-  base: "/cloud-game-frontend-wcu/",
+  plugins: [vike(), react(), tailwindcss()]
 });

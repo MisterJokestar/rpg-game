@@ -53,10 +53,10 @@ export default function Page() {
                             </div>
                         </li>
                     ))}
-                    <button className="text-xl bg-gray-800 rounded-xl p-4" onClick={() => {navigate("/character")}}>
-                        Create New Character 
+                    <button key="create-character" className="text-xl bg-gray-800 rounded-xl p-4" onClick={() => {navigate("/character")}}>
+                        Create New Character
                     </button>
-                    <button className="text-xl bg-gray-800 rounded-xl p-4 mx-4" onClick={() => {navigate("/leaderboard")}}>
+                    <button key="view-leaderboard" className="text-xl bg-gray-800 rounded-xl p-4 mx-4" onClick={() => {navigate("/leaderboard")}}>
                         View Leaderboard
                     </button>
                 </ul>

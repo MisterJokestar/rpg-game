@@ -61,13 +61,13 @@ export default function Page() {
 
   async function sendAction(action: Action) {
     setActionPending(true);
-    await apiClient.post(`/games/${gameIdRef.current}/actions`, action);
+    await apiClient.post(`/session/${gameIdRef.current}/action`, action);
   }
 
   async function stopGame() {
     stoppedRef.current = true;
     esRef.current?.close();
-    await apiClient.post(`/games/${gameIdRef.current}/stop`);
+    await apiClient.post(`/session/${gameIdRef.current}/stop`);
     setStatus('stopped');
   }
 
@@ -75,9 +75,9 @@ export default function Page() {
     const game_id = new URLSearchParams(window.location.search).get('game_id');
     gameIdRef.current = game_id;
 
-    apiClient.post(`/games/${game_id}`, {})
+    apiClient.post(`/session/${game_id}`, {})
       .then(() => {
-        const es = new EventSource(BASE_URL + `/games/${game_id}/stream`);
+        const es = new EventSource(BASE_URL + `/session/${game_id}/stream`);
         esRef.current = es;
 
         es.addEventListener('snapshot', (e) => {
@@ -137,7 +137,7 @@ export default function Page() {
     return () => {
       esRef.current?.close();
       if (!stoppedRef.current) {
-        apiClient.post(`/games/${game_id}/stop`).catch(() => {});
+        apiClient.post(`/session/${game_id}/stop`).catch(() => {});
       }
       if (messageTimerRef.current) clearTimeout(messageTimerRef.current);
     };

@@ -57,6 +57,6 @@ firestore = { version = "0.44", optional = true }
 mongodb = { version = "3", optional = true }
 
 [features]
-default = ["firestore"]
+default = []
 firestore = ["dep:firestore"]
 mongodb = ["dep:mongodb"]

@@ -65,7 +65,7 @@ cargo run --features mongodb
 cargo run --features firestore
 ```
 
-The default feature (set in `Cargo.toml`) is `firestore`.
+There is no default feature — you must explicitly select a backend when building.
 
 ---
 

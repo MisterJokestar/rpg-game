@@ -14,7 +14,7 @@ use axum::{
 };
 use crate::{
     error::AppError,
-    models::character::{Character, CreateCharacterRequest, CreateCharacterResponse},
+    models::character::{Character, CharacterResponse, CreateCharacterRequest, CreateCharacterResponse},
     state::AppState
 };
 
@@ -27,11 +27,11 @@ use crate::{
 pub async fn get_characters(
     State(state): State<Arc<AppState>>,
     Path(user_id): Path<String>,
-) -> Result<(StatusCode, Json<Vec<Character>>), AppError> {
+) -> Result<(StatusCode, Json<Vec<CharacterResponse>>), AppError> {
     let user = state.users.get_user_by_id(user_id.clone()).await?
         .ok_or_else(|| AppError::NotFound(format!("User with id, {}, Does not exist.", user_id)))?;
     let characters = state.characters.get_characters(user.characters).await?;
-    Ok((StatusCode::OK, Json(characters)))
+    Ok((StatusCode::OK, Json(characters.into_iter().map(CharacterResponse::from).collect())))
 }
 
 /// `GET /character/:character_id` — fetch a character by its unique ID.
@@ -43,10 +43,10 @@ pub async fn get_characters(
 pub async fn get_character(
     State(state): State<Arc<AppState>>,
     Path(character_id): Path<String>,
-) -> Result<(StatusCode, Json<Character>), AppError> {
+) -> Result<(StatusCode, Json<CharacterResponse>), AppError> {
     let character = state.characters.get_character(character_id.clone()).await?
         .ok_or_else(|| AppError::NotFound(format!("Character with id, {}, Does not exist.", character_id)))?;
-    Ok((StatusCode::OK, Json(character)))
+    Ok((StatusCode::OK, Json(CharacterResponse::from(character))))
 }
 
 /// `POST /character/update` — replace an existing character with the provided

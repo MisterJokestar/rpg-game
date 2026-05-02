@@ -31,7 +31,7 @@ use tokio::sync::Notify;
 use crate::{
     error::AppError,
     game::{runner::Runner, watcher::Watcher},
-    models::{Action, game::Game},
+    models::{Action, game::{GameEventResponse, GameResponse}},
     state::{AppState, GameSession}
 };
 
@@ -49,7 +49,7 @@ use crate::{
 pub async fn start_game(
     State(state): State<Arc<AppState>>,
     Path(game_id): Path<String>,
-) -> Result<(StatusCode, Json<Game>), AppError> {
+) -> Result<(StatusCode, Json<GameResponse>), AppError> {
     let mut game = state.games.get_game(game_id.clone()).await?
         .ok_or_else(|| AppError::NotFound(format!("Game not found with id, '{}'", game_id)))?;
 
@@ -93,7 +93,7 @@ pub async fn start_game(
     tokio::spawn(async move { runner.run().await });
     tokio::spawn(async move { watcher.run().await });
 
-    Ok((StatusCode::CREATED, Json(game)))
+    Ok((StatusCode::CREATED, Json(GameResponse::from(game))))
 }
 
 /// `POST /session/:game_id/stop` — gracefully stop an active session.
@@ -185,7 +185,7 @@ pub async fn game_stream(
 
     // Send the current state immediately as the first event
     let snapshot_event = stream::once(async move {
-        let data = serde_json::to_string(&snapshot_game).unwrap();
+        let data = serde_json::to_string(&GameResponse::from(snapshot_game)).unwrap();
         Ok(Event::default().event("snapshot").data(data))
     });
 
@@ -193,7 +193,7 @@ pub async fn game_stream(
     let live_stream = BroadcastStream::new(rx).filter_map(move |event| match event {
         Ok(e) if e.seq <= snapshot_seq => None,
         Ok(e) => {
-            let data = serde_json::to_string(&e.event).unwrap();
+            let data = serde_json::to_string(&GameEventResponse::from(e.event)).unwrap();
             Some(Ok(Event::default().data(data)))
         }
         Err(BroadcastStreamRecvError::Lagged(n)) => {

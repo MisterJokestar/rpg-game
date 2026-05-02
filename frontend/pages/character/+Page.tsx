@@ -49,7 +49,7 @@ export default function Page() {
                 let response = await apiClient.get(
                     `/character/${characterIdRef.current}`
                 );
-                let res_character: Character = response.data.character;
+                let res_character: Character = response.data;
                 setCharacter(res_character);
                 let tp: number = res_character.stats.speed + res_character.stats.power + res_character.stats.defense;
                 setTotalPoints(tp);
@@ -110,7 +110,7 @@ export default function Page() {
             if (user_id && secret && character) {
                 let request: CreateGameRequest = {
                     player_id: user_id,
-                    character_id: character.name
+                    character_id: character.id
                 }
                 let response = await apiClient.post(
                     '/game/new',
