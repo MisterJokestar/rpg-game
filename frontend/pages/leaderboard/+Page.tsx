@@ -21,7 +21,7 @@ export default function Page() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                let response = await apiClient.post('/leaderboard');
+                let response = await apiClient.get('/leaderboard');
                 let leaderboard: LeaderBoardEntry[] = response.data;
                 setEntries(leaderboard);
             } catch (error) {

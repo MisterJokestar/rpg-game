@@ -32,21 +32,6 @@ export default function Page() {
         fetchData();
     }, []);
 
-        const game_id = game?.id;
-        const character_name = character?.name;
-        const player_stats = character?.stats;
-        const win = game?.win;
-        const round = game?.round;
-        const turn = game?.turn;
-        const complete = game?.complete; // has the player died
-        const player_state = game?.player_state
-        const enemy_state = game?.enemy_state;
-        const enemies_defeated = game?.enemies_defeated;
-
-        const patch_win = player_state && player_state.health.current === 0 ? false :
-            player_state && round && round > 3 ? true : null;
-
-
     if (!game && !character){
         return(
             <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
@@ -58,13 +43,13 @@ export default function Page() {
 
         <div className="min-h-screen bg-gray-950 text-white p-8">
             <h1 className="text-4xl font-bold text-center mb-2">Game Stats</h1>
-            {<p className="text-center text-gray-400 mb-8">Game ID: {game_id}</p>}
+            {<p className="text-center text-gray-400 mb-8">Game ID: {game?.id}</p>}
 
             {/* Result */}
-            {patch_win !== null && (
-                <div className={`text-center text-2xl font-bold mb-8 ${patch_win ? "text-green-400" :
+            {game?.win !== null && (
+                <div className={`text-center text-2xl font-bold mb-8 ${game?.win ? "text-green-400" :
                 "text-red-400"}`}>
-                    {patch_win ? "Victory" : "Defeat"}
+                    {game?.win ? "Victory" : "Defeat"}
                 </div>
             )}
 
@@ -73,20 +58,20 @@ export default function Page() {
                 {/* Character */}
                 <div className="bg-gray-900 rounded-xl border border-gray-700 p-6">
                     <h2 className="text-gray-400 uppercase text-xs font-semibold mb-4">Character</h2>
-                    <p className="text-xl font-bold">{character_name}</p>
-                    <p className="text-gray-400 text-sm mt-1">Round {round!} • Turn {turn!}</p>
+                    <p className="text-xl font-bold">{character?.name}</p>
+                    <p className="text-gray-400 text-sm mt-1">Round {game?.round} • Turn {game?.turn}</p>
                     <div className="grid grid-cols-3 gap-4 mt-4">
                         <div>
                             <p className="text-gray-400 text-sm">Power</p>
-                            <p className="text-xl font-bold text-red-400">{player_stats?.power}</p>
+                            <p className="text-xl font-bold text-red-400">{character?.stats.power}</p>
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Defense</p>
-                            <p className="text-xl font-bold text-blue-400">{player_stats?.defense}</p>
+                            <p className="text-xl font-bold text-blue-400">{character?.stats.defense}</p>
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Speed</p>
-                            <p className="text-xl font-bold text-green-400">{player_stats?.speed}</p>
+                            <p className="text-xl font-bold text-green-400">{character?.stats.speed}</p>
                         </div>
                     </div>
                 </div>
@@ -94,7 +79,7 @@ export default function Page() {
                 {/* Health */}
                 <div className="bg-gray-900 rounded-xl border border-gray-700 p-6">
                     <h2 className="text-gray-400 uppercase text-xs font-semibold mb-4">Health</h2>
-                    <p className="text-xl font-bold">{player_state!.health.current} / {player_state!.health.max}</p>
+                    <p className="text-xl font-bold">{game?.player_state.health.current} / {game?.player_state.health.max}</p>
                 </div>
 
                 {/* Combat Stats */}
@@ -103,23 +88,23 @@ export default function Page() {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <p className="text-gray-400 text-sm">Damage Dealt</p>
-                            <p className="text-xl font-bold text-red-400">{player_state!.damage_dealt.toLocaleString()}</p>
+                            <p className="text-xl font-bold text-red-400">{game?.player_state.damage_dealt.toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Damage Taken</p>
-                            <p className="text-xl font-bold text-orange-400">{player_state!.damage_taken.toLocaleString()}</p>
+                            <p className="text-xl font-bold text-orange-400">{game?.player_state.damage_taken.toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Damage Healed</p>
-                            <p className="text-xl font-bold text-green-400">{player_state!.damage_healed.toLocaleString()}</p>
+                            <p className="text-xl font-bold text-green-400">{game?.player_state.damage_healed.toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Damage Blocked</p>
-                            <p className="text-xl font-bold text-blue-400">{player_state!.damage_blocked.toLocaleString()}</p>
+                            <p className="text-xl font-bold text-blue-400">{game?.player_state.damage_blocked.toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Damage Dodged</p>
-                            <p className="text-xl font-bold text-purple-400">{player_state!.damage_dodged.toLocaleString()}</p>
+                            <p className="text-xl font-bold text-purple-400">{game?.player_state.damage_dodged.toLocaleString()}</p>
                         </div>
                     </div>
                 </div>
@@ -131,21 +116,21 @@ export default function Page() {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <p className="text-gray-400 text-sm">Type</p>
-                                <p className="text-xl font-bold">{enemy_state!.enemy_type}</p>
+                                <p className="text-xl font-bold">{game?.enemy_state.enemy_type}</p>
                             </div>
                             <div>
                                 <p className="text-gray-400 text-sm">Health</p>
-                                <p className="text-xl font-bold">{enemy_state!.health.current} / {enemy_state!.health.max}</p>
+                                <p className="text-xl font-bold">{game?.enemy_state.health.current} / {game?.enemy_state.health.max}</p>
                             </div>
                         </div>
                     </div>
 
-                    {enemies_defeated && Object.keys(enemies_defeated).length > 0 &&(
+                    {game?.enemies_defeated && game?.enemies_defeated.size > 0 &&(
                         <div className="bg-gray-900 rounded-xl border border-gray-700 p-6 flex-1 self-start">
                             <h2 className="text-gray-400 uppercase text-xs font-semibold mb-4">Enemies Defeated</h2>
 
                             <div className="flex flex-col gap-2 overflow-y-auto max-h-40">
-                                {Object.entries(enemies_defeated).map(([enemy, count]) => (
+                                {Object.entries(game?.enemies_defeated).map(([enemy, count]) => (
                                     <div key={enemy} className="flex justify-between">
                                         <p className="text-gray-300">{enemy}</p>
                                         <p className="font-bold">x{count}</p>
@@ -161,10 +146,10 @@ export default function Page() {
             rounded-lg text-base transition-colors cursor-pointer"
             >Back</a>
 
-            <a onClick={() => navigate(`/game_session?game_id=${game_id}`)} className="fixed bottom-8 right-8 px-6
+            {!game?.complete && <a onClick={() => navigate(`/game_session?game_id=${game?.id}`)} className="fixed bottom-8 right-8 px-6
             py-3 bg-yellow-400 text-gray-950 font-bold hover:bg-yellow-300 rounded-lg
             text-base transition-colors cursor-pointer"
-            >Continue Game</a>
+            >Continue Game</a>}
         </div>
     );
 }
