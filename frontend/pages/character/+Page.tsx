@@ -4,6 +4,7 @@ import { apiClient } from "../../axiosConfig";
 import characterImg from "../../assets/Character.png";
 import { navigate } from "vike/client/router";
 import { CreateCharacterRequest, CreateGameRequest } from "../../models/api";
+import FooterNav from "../../components/FooterNav";
 
 /**
  * Character page (`/character`).
@@ -281,6 +282,7 @@ export default function Page() {
                   </div>
               )}
           </div>
+          <FooterNav />
       </div>
   );
 }

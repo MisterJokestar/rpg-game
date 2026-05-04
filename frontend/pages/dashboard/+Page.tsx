@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Character } from "../../models/game"
 import { apiClient } from "../../axiosConfig";
 import { navigate } from "vike/client/router";
+import FooterNav from "../../components/FooterNav";
 
 /**
  * Dashboard page (`/dashboard`).
@@ -76,6 +77,7 @@ export default function Page() {
                     </button>
                 </ul>
             </div>
+            <FooterNav showBack={false} />
         </div>
     )
 }

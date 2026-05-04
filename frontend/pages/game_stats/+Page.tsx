@@ -2,6 +2,7 @@ import {Character, Game} from "../../models/game";
 import { useState, useEffect } from "react";
 import { apiClient } from "../../axiosConfig";
 import { navigate } from "vike/client/router";
+import FooterNav from "../../components/FooterNav";
 
 /**
  * Game stats page (`/game_stats`).
@@ -153,9 +154,7 @@ export default function Page() {
                 </div>
             </div>
 
-            <a onClick={() => navigate("/dashboard")} className="fixed bottom-8 left-8 px-6 py-3 bg-gray-800 hover:bg-gray-700
-            rounded-lg text-base transition-colors cursor-pointer"
-            >Back</a>
+            <FooterNav />
 
             {!game?.complete && <a onClick={() => navigate(`/game_session?game_id=${game?.id}`)} className="fixed bottom-8 right-8 px-6
             py-3 bg-yellow-400 text-gray-950 font-bold hover:bg-yellow-300 rounded-lg

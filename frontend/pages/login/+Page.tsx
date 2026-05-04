@@ -2,6 +2,7 @@ import { ChangeEvent, useState } from "react";
 import { navigate } from "vike/client/router";
 import { apiClient } from "../../axiosConfig";
 import { LogInRequest, LogInResponse } from "../../models/api";
+import FooterNav from "../../components/FooterNav";
 
 /**
  * Login page (`/login`).
@@ -114,11 +115,7 @@ export default function Page() {
                 </form>
             </div>
 
-            <a
-                onClick={() => navigate(localStorage.getItem("userId") ? "/dashboard" : "/")}
-                className="fixed bottom-8 left-8 px-6 py-3 bg-gray-800 hover:bg-gray-700
-                rounded-lg text-base transition-colors cursor-pointer">Home
-            </a>
+            <FooterNav />
 
             <div className="fixed bottom-8 right-8 flex flex-col items-end gap-2">
                 <a onClick={() => navigate("/create_account")} className="px-6 py-3 bg-gray-800 hover:bg-gray-700

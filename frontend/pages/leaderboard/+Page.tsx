@@ -2,6 +2,7 @@ import {useEffect, useState} from "react";
 import {apiClient} from "../../axiosConfig";
 import { navigate } from "vike/client/router";
 import { LeaderBoardEntry } from "../../models/api";
+import FooterNav from "../../components/FooterNav";
 
 /** The stat fields that can be used to sort the leaderboard. */
 type SortKey = "games_won" | "rounds_survived" | "damage_dealt" | "enemies_defeated";
@@ -170,11 +171,7 @@ export default function Page() {
                     </table>
                 </div>
             </div>
-            <a
-                onClick={() => navigate(localStorage.getItem("userId") ? "/dashboard" : "/")}
-                className="fixed bottom-8 left-8 px-6 py-3 bg-gray-800 hover:bg-gray-700
-                rounded-lg text-base transition-colors cursor-pointer"
-            >Back</a>
+            <FooterNav />
         </div>
     );
 }
