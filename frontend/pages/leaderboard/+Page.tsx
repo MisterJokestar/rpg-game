@@ -3,18 +3,27 @@ import {apiClient} from "../../axiosConfig";
 import { navigate } from "vike/client/router";
 import { LeaderBoardEntry } from "../../models/api";
 
-// the data the leaderboard will be sorted-on
+/** The stat fields that can be used to sort the leaderboard. */
 type SortKey = "games_won" | "rounds_survived" | "damage_dealt" | "enemies_defeated";
+
+/**
+ * Leaderboard page (`/leaderboard`).
+ *
+ * Fetches aggregated player stats from `GET /leaderboard` and renders a
+ * sortable table. Multiple sort criteria can be active simultaneously — each
+ * player's visible score is the sum of the selected stats. Players with equal
+ * scores share a rank.
+ */
 export default function Page() {
 
-    // tracks which stats are being used for sorting
+    /** Tracks which stats are currently factored into the ranking score. */
     const [sortBy, setSortBy] = useState<Record<SortKey, boolean>>({
         games_won: true,
         rounds_survived: false,
         damage_dealt: false,
         enemies_defeated: false,
     });
-    // holds the aggregated leaderboard entries received from the cloud function
+    /** The aggregated leaderboard entries fetched from the API. */
     const [entries, setEntries] = useState<LeaderBoardEntry[]>([]);
 
     // fetch and parse the leaderboard on page load
@@ -33,7 +42,15 @@ export default function Page() {
 
     console.log(entries);
 
-    // toggles a sort key on | off, ensuring at least one is always checked
+    /**
+     * Toggle a sort key on or off.
+     *
+     * At least one key must remain active at all times. If toggling a key off
+     * would leave all keys unchecked, the adjacent key is automatically
+     * enabled as a fallback.
+     *
+     * @param key - The sort key to toggle.
+     */
     const toggle = (key: SortKey) => {
         setSortBy(prev => {
             const next = { ...prev, [key]: !prev[key] };
@@ -43,7 +60,15 @@ export default function Page() {
         });
     };
 
-    // calculates a players total score based on whichever sort keys are checked
+    /**
+     * Calculate a player's composite ranking score based on the active sort keys.
+     *
+     * Each enabled sort key contributes its raw value to the total; disabled
+     * keys contribute zero.
+     *
+     * @param p - The leaderboard entry to score.
+     * @returns The player's composite score.
+     */
     const player_score = (p: LeaderBoardEntry) => {
         let total = 0;
         if (sortBy.games_won) total += p.wins;
@@ -54,7 +79,14 @@ export default function Page() {
     };
     const entries_sorted = [ ...entries].sort((a,b) => player_score(b) - player_score(a));
 
-    // derives the rank from score, players with equal score share a rank
+    /**
+     * Derive the display rank for a player at the given sorted index.
+     *
+     * Players with equal composite scores share the same rank number.
+     *
+     * @param index - Zero-based index into the sorted entries array.
+     * @returns The 1-based display rank.
+     */
     const getRank = (index: number): number => {
         if (index === 0) return 1;
         const curr = player_score(entries_sorted[index]);

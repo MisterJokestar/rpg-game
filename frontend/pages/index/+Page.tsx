@@ -1,6 +1,13 @@
 import { useEffect } from "react";
 import { navigate } from "vike/client/router";
 
+/**
+ * Landing page (`/`).
+ *
+ * Immediately redirects authenticated users (those with `secret`, `userId`,
+ * and `username` in `localStorage`) to the dashboard. Unauthenticated users
+ * see buttons to log in, sign up, or view the leaderboard.
+ */
 export default function Page() {
     // If already logged in, navigate stright to dashboard.
     useEffect(() => {

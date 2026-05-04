@@ -5,6 +5,17 @@ import characterImg from "../../assets/Character.png";
 import { navigate } from "vike/client/router";
 import { CreateCharacterRequest, CreateGameRequest } from "../../models/api";
 
+/**
+ * Character page (`/character`).
+ *
+ * Serves two modes based on whether a `?character_id=<id>` query parameter
+ * is present:
+ *
+ * - **View/edit mode** — loads the character from the API, displays their
+ *   stats and game history, and allows saving changes or starting a new game.
+ * - **Create mode** — provides a blank character form with a 15-point stat
+ *   budget to allocate across power, speed, and defense.
+ */
 export default function Page() {
     const characterIdRef = useRef<String | null>(null);
     const [character, setCharacter] = useState<Character | undefined>(undefined);
@@ -12,11 +23,18 @@ export default function Page() {
     const [unusedPoints, setUnusedPoints] = useState<number>(0);
     const [newCharacter, setNewCharacter] = useState<boolean>(false);
 
+    /**
+     * Initialise the page.
+     *
+     * If a `character_id` query parameter is present the character is fetched
+     * from the API; otherwise a blank character skeleton is created and the
+     * page enters create mode with 15 allocatable stat points.
+     */
     async function retrieve_data() {
         let user_id = localStorage.getItem("userId");
         let secret = localStorage.getItem("secret");
         let character_id = new URLSearchParams(window.location.search).get('character_id');
-        
+
         if (character_id) {
             characterIdRef.current = character_id;
             await grab_character(user_id, secret);
@@ -43,6 +61,15 @@ export default function Page() {
         retrieve_data();
     }, []);
 
+    /**
+     * Fetch a character by ID from the API and store it in state.
+     *
+     * Also computes `totalPoints` as the sum of all three stats so the visual
+     * bar scales correctly.
+     *
+     * @param user_id - The logged-in user's ID (used for auth via interceptor).
+     * @param secret - The session secret (used for auth via interceptor).
+     */
     async function grab_character(user_id: string | null, secret: string | null) {
         try {
             if (user_id && secret) {
@@ -59,6 +86,10 @@ export default function Page() {
         }
     }
 
+    /**
+     * Create a new character via `POST /character/new` and navigate to the
+     * dashboard on success.
+     */
     async function new_character() {
         let user_id = localStorage.getItem("userId");
         let secret = localStorage.getItem("secret");
@@ -86,6 +117,9 @@ export default function Page() {
         }
     }
 
+    /**
+     * Persist changes to an existing character via `POST /character/update`.
+     */
     async function update_character() {
         let user_id = localStorage.getItem("userId");
         let secret = localStorage.getItem("secret");
@@ -102,6 +136,10 @@ export default function Page() {
         }
     }
 
+    /**
+     * Create a new game for the current character via `POST /game/new` and
+     * navigate to the game session page.
+     */
     async function create_game() {
         let user_id = localStorage.getItem("userId");
         let secret = localStorage.getItem("secret");
@@ -125,6 +163,13 @@ export default function Page() {
 
     }
 
+    /**
+     * Increment or decrement a single character stat by `delta`, respecting
+     * the minimum value of 1 and the remaining unused-points budget.
+     *
+     * @param stat - Which stat to adjust (`"power"`, `"speed"`, or `"defense"`).
+     * @param delta - Amount to change the stat by (`+1` or `-1`).
+     */
     function adjustStat(stat: 'power' | 'speed' | 'defense', delta: number) {
         if (!character) return;
         const current = character.stats[stat];

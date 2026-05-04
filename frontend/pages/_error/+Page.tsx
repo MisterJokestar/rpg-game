@@ -1,5 +1,12 @@
 import { usePageContext } from "vike-react/usePageContext";
 
+/**
+ * Error fallback page (`/_error`).
+ *
+ * Rendered by Vike for any unhandled route or server error. Displays a
+ * "Page Not Found" message for 404s and a generic "Internal Error" message
+ * for all other error types.
+ */
 export default function Page() {
   const { is404 } = usePageContext();
   if (is404) {

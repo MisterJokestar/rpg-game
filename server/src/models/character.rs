@@ -60,10 +60,15 @@ pub struct CreateCharacterRequest {
 /// regardless of the active database backend.
 #[derive(Debug, Clone, Serialize)]
 pub struct CharacterResponse {
+    /// Unique character identifier.
     pub id: String,
+    /// ID of the owning user.
     pub owner: String,
+    /// Display name chosen by the player.
     pub name: String,
+    /// Combat statistics.
     pub stats: Stats,
+    /// IDs of all games this character has been used in.
     pub games: Vec<String>,
 }
 
@@ -79,8 +84,10 @@ impl From<Character> for CharacterResponse {
     }
 }
 
+/// Response body returned after a successful `POST /character/new`.
 #[derive(Debug, Clone, Serialize)]
 pub struct CreateCharacterResponse {
+    /// ID of the newly created character.
     pub character_id: String,
 }
 

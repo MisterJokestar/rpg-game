@@ -1,6 +1,6 @@
 # Server
 
-Rust REST API backend built with [Axum](https://github.com/tokio-rs/axum). It is designed to run locally against MongoDB during development and against Google Cloud Firestore in production. The database backend is selected at runtime via an environment variable — no code changes needed to switch.
+Rust REST API backend built with [Axum](https://github.com/tokio-rs/axum). Runs locally against MongoDB during development and against Google Cloud Firestore in production. The database backend is selected at **compile time** via Cargo feature flags.
 
 ## Tech Stack
 
@@ -9,11 +9,13 @@ Rust REST API backend built with [Axum](https://github.com/tokio-rs/axum). It is
 | `axum 0.7` | HTTP routing and request/response handling |
 | `tokio 1` | Async runtime |
 | `tower` / `tower-http` | Middleware stack (CORS, request tracing) |
-| `serde` / `serde_json` | Serialization — models derive `Serialize`/`Deserialize` |
+| `serde` / `serde_json` | Serialisation — models derive `Serialize`/`Deserialize` |
 | `thiserror` / `anyhow` | Structured error types and propagation |
 | `tracing` / `tracing-subscriber` | Structured logging, level set via `RUST_LOG` |
 | `dotenvy` | Loads `.env` at startup (no-op in production) |
-| `uuid` | UUID v4 IDs for users, characters, and games |
+| `uuid` | UUID **v7** IDs for users, characters, and games |
+| `bcrypt` | Password hashing |
+| `rand` | Random number generation (session secrets, enemy selection) |
 | `firestore 0.44` | Production Firestore client (GCP Application Default Credentials) |
 | `mongodb 3` | Local development MongoDB client |
 
@@ -24,25 +26,39 @@ server/
 ├── src/
 │   ├── main.rs              # Entry point — loads config, wires state, starts listener
 │   ├── config.rs            # Reads all env vars into a Config struct
-│   ├── state.rs             # AppState — shared resources injected into route handlers
+│   ├── state.rs             # AppState and GameSession (shared handles per live game)
 │   ├── error.rs             # AppError enum, mapped to HTTP status codes
 │   ├── models/
-│   │   ├── mod.rs
-│   │   ├── user.rs          # User, Character, Stats, AddCharacterRequest
-│   │   └── game.rs          # Game, PlayerState, EnemyState
+│   │   ├── mod.rs           # Action enum (Attack / Defend / Heal / None)
+│   │   ├── user.rs          # User, CreateUserRequest, LogInRequest/Response
+│   │   ├── character.rs     # Character, Stats, CreateCharacterRequest/Response
+│   │   └── game.rs          # Game, PlayerState, EnemyState, Health, events, Combatant trait
 │   ├── db/
-│   │   ├── mod.rs           # Repository trait (stubbed — see TODOs)
-│   │   ├── firestore.rs     # FirestoreRepository (production backend)
-│   │   └── mongodb.rs       # MongoRepository (local dev backend)
+│   │   ├── mod.rs           # Repository traits (UserRepository, GameRepository, CharacterRepository)
+│   │   ├── firestore.rs     # FirestoreRepository — production backend (feature-gated)
+│   │   └── mongodb.rs       # MongoRepository — local dev backend (feature-gated)
 │   ├── routes/
-│   │   ├── mod.rs           # create_router() — assembles all routes
-│   │   └── items.rs         # Placeholder route handlers (commented out)
-│   └── middleware/
-│       ├── mod.rs
-│       └── auth.rs          # Auth middleware (currently pass-through)
+│   │   ├── mod.rs           # create_router() — assembles all routes with CORS and auth middleware
+│   │   ├── auth.rs          # POST /create_user, POST /login
+│   │   ├── character.rs     # GET /character/all/:user_id, GET /character/:id, POST /character/*
+│   │   ├── game.rs          # GET /game/:id, GET /games, POST /game/*, GET /leaderboard
+│   │   └── session.rs       # POST/GET /session/:id/*
+│   ├── middleware/
+│   │   ├── mod.rs
+│   │   └── auth.rs          # Authorization header validation middleware
+│   ├── game/
+│   │   ├── runner.rs        # Turn-based game loop (spawned per session)
+│   │   └── watcher.rs       # Inactivity timeout / stop signal handler
+│   └── enemys/
+│       ├── mod.rs           # Enemy trait, EnemyType enum, factory functions
+│       ├── dummy.rs         # Passive placeholder enemy
+│       ├── rose_buddies.rs  # Thorns + heal cycle enemy
+│       ├── copper_sides.rs  # Charge-up tanky enemy
+│       ├── maestro.rs       # Ammo/reload ranged attacker
+│       ├── iron_lotus.rs    # Burn-stacking enemy
+│       └── bomb.rs          # Countdown detonator enemy
 ├── .env.example             # Template for local environment variables
 ├── Dockerfile               # Multi-stage build for the server image
-├── docker-compose.yml       # Spins up MongoDB + server containers
 └── Cargo.toml
 ```
 
@@ -51,7 +67,10 @@ server/
 ### Prerequisites
 
 - [Rust toolchain](https://rustup.rs/) (stable)
-- [Docker](https://docs.docker.com/get-docker/) (for local MongoDB)
+- A running MongoDB instance — use the database-only compose file:
+  ```bash
+  docker compose -f ../docker-compose.db.yml up -d
+  ```
 
 ### 1. Configure environment
 
@@ -73,78 +92,48 @@ Key variables (full list in `.env.example`):
 | `PORT` | `5000` | Listen port |
 | `RUST_LOG` | `server=debug,tower_http=debug` | Log verbosity |
 
-### 2. Start the stack
+### 2. Select a database backend
 
-**Option A — fully containerized (recommended):**
+The backend is chosen at **compile time** via a Cargo feature flag — there is no runtime environment variable to switch backends:
 
 ```bash
-docker compose up -d        # starts both MongoDB and the server
-# or
-podman-compose up -d
+# Local development — MongoDB
+cargo run --features mongodb
+
+# Production — Firestore
+cargo run --features firestore
 ```
 
-MongoDB data is persisted in the `mongo-data` volume. To rebuild only the server without touching the database:
+There is no default feature; you must pass exactly one flag.
+
+### 3. Option B — MongoDB in Docker, server via cargo
 
 ```bash
-docker compose up server --build
-```
-
-**Option B — MongoDB in Docker, server via cargo:**
-
-```bash
-docker compose up mongo -d  # start only the MongoDB container
+# From the repo root:
+docker compose -f docker-compose.db.yml up -d   # start only MongoDB
+cd server
 cargo run --features mongodb
 ```
 
 The server listens on `http://0.0.0.0:5000` by default.
 
-### Switching to Firestore (production)
+## Switching to Firestore (production)
 
-Run with the `firestore` feature flag:
 ```bash
 cargo run --features firestore
 ```
-Ensure `FIRESTORE_PROJECT_ID` is set in `.env` and Application Default Credentials are configured (`gcloud auth application-default login` or `GOOGLE_APPLICATION_CREDENTIALS`).
 
-## Current State and TODOs
+Ensure `FIRESTORE_PROJECT_ID` is set in `.env` and Application Default Credentials are configured:
 
-The scaffolding is in place but the application logic is not yet implemented. The major next steps are:
-
-### 1. Define the Repository trait (`src/db/mod.rs`)
-
-Replace the commented-out `Item`-based trait with one that covers `User` and `Game` operations:
-
-```rust
-#[async_trait]
-pub trait Repository: Send + Sync {
-    async fn get_user(&self, id: Uuid) -> Result<Option<User>, AppError>;
-    async fn create_user(&self, user: User) -> Result<User, AppError>;
-    // ... etc.
-}
+```bash
+gcloud auth application-default login
+# or set GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
 ```
 
-### 2. Implement the backends (`src/db/firestore.rs`, `src/db/mongodb.rs`)
+## Generating Documentation
 
-Each file has a `TODO` comment marking where the `Repository` impl goes. Both structs are already constructed and connected at startup.
-
-### 3. Wire the repository into `AppState` (`src/state.rs`)
-
-```rust
-pub struct AppState {
-    pub db: Arc<dyn Repository>,
-}
+```bash
+cargo doc --features mongodb --no-deps --open
 ```
 
-Uncomment and update the backend selection block in `src/main.rs`.
-
-### 4. Add route handlers (`src/routes/items.rs` → rename to `users.rs` / `games.rs`)
-
-The commented-out handlers in `items.rs` show the axum pattern. Replace them with handlers for `User` and `Game` endpoints and register the routes in `src/routes/mod.rs`.
-
-### 5. Implement auth middleware (`src/middleware/auth.rs`)
-
-The middleware currently passes every request through. The `TODO` comment in that file describes the intended approach: extract credentials, validate against the stored `secret` field on `User`, and return `401` on failure.
-
-### 6. Add request/response DTOs
-
-The models in `src/models/` are currently used as both DB documents and HTTP bodies. Consider splitting them into separate request/response types as the API surface grows.
+All public items carry `///` doc comments; all modules carry `//!` module-level doc blocks.

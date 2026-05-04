@@ -86,6 +86,15 @@ pub async fn create_game(
     Ok((StatusCode::CREATED, Json(response)))
 }
 
+/// `GET /leaderboard` — aggregate all games into a per-player leaderboard.
+///
+/// Iterates every game record and groups stats (wins, rounds, damage dealt,
+/// enemies defeated) by player ID. Players with no matching user record are
+/// silently skipped.
+///
+/// # Errors
+///
+/// - [`AppError::Database`] if the game or user database reads fail.
 pub async fn get_leaderboard(
     State(state): State<Arc<AppState>>
 ) -> Result<(StatusCode, Json<Vec<LeaderboardEntry>>), AppError> {

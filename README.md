@@ -1,4 +1,4 @@
-# Cloud Final Project
+# RPG Game | Expansion of Cloud Computing Final Project
 
 A full-stack turn-based RPG web application with a Rust/Axum backend, React/Vike frontend, and dual database support (MongoDB for local development, Firestore for production).
 
@@ -22,7 +22,12 @@ Authors: Ryan Jobson, Sam Plemmons, James Wall
 
 ## Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
+**Required:**
+- [Rust toolchain](https://rustup.rs/) (stable) — for the backend
+- [Node.js](https://nodejs.org/) 22+ — for the frontend
+
+**Optional:**
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose — for containerised database and deployment
 
 ---
 
@@ -165,6 +170,7 @@ Requires `frontend/.env` with `VITE_SERVER_BASE_URL=http://localhost:5000`.
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
+| GET | `/character/all/:user_id` | Yes | List all characters belonging to a user |
 | GET | `/character/:character_id` | Yes | Fetch a character by ID |
 | POST | `/character/update` | Yes | Replace an existing character record |
 | POST | `/character/new` | Yes | Create a new character |
@@ -264,6 +270,21 @@ server/
 │       ├── maestro.rs
 │       ├── iron_lotus.rs
 │       └── bomb.rs
-frontend/                  # React + Vike SSR frontend
+frontend/
+├── pages/
+│   ├── index/             # Landing page (redirects if already logged in)
+│   ├── login/             # Sign-in form
+│   ├── create_account/    # Registration form
+│   ├── dashboard/         # Character list for the logged-in user
+│   ├── character/         # Create or view/edit a character; start a new game
+│   ├── game_session/      # Live turn-based combat (SSE-driven)
+│   ├── game_stats/        # Post-game summary
+│   ├── leaderboard/       # Global leaderboard with multi-criteria sorting
+│   └── _error/            # 404 / error fallback
+├── models/
+│   ├── game.tsx           # Game, PlayerState, EnemyState, Character, Action types
+│   └── api.tsx            # Request/response DTO types for the backend API
+├── assets/                # Enemy and character sprite images
+└── axiosConfig.tsx        # Pre-configured Axios client with auth interceptor
 Cargo.toml
 ```

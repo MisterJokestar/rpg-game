@@ -11,6 +11,14 @@ import bombImg from "../../assets/Bomb.png";
 
 const BASE_URL = import.meta.env.VITE_SERVER_BASE_URL ?? "http://localhost:5000";
 
+/**
+ * Return the sprite image path for a given enemy type string.
+ *
+ * Falls back to the generic character image for unknown enemy types.
+ *
+ * @param enemy_type - The enemy type discriminant string (e.g. `"CopperSides"`).
+ * @returns The imported image asset path to use in an `<img>` `src` attribute.
+ */
 function getEnemyImage(enemy_type: string): string {
   if (enemy_type === 'CopperSides') return copperSidesImg;
   if (enemy_type === 'RoseBuddies') return roseBuddiesImg;
@@ -20,6 +28,15 @@ function getEnemyImage(enemy_type: string): string {
   return characterImg;
 }
 
+/**
+ * Determine whether it is currently the player's turn to act.
+ *
+ * The player acts when their `next_turn` value is less than or equal to the
+ * enemy's, or when either value is `null` (turn not yet assigned).
+ *
+ * @param game - The current game snapshot.
+ * @returns `true` if the player should act next.
+ */
 function isPlayerTurn(game: Game): boolean {
   const pt = game.player_state.next_turn;
   const et = game.enemy_state.next_turn;
@@ -27,6 +44,16 @@ function isPlayerTurn(game: Game): boolean {
   return pt <= et;
 }
 
+/**
+ * A colour-coded HP bar component.
+ *
+ * - Green above 50% HP
+ * - Yellow between 25% and 50%
+ * - Red below 25%
+ *
+ * @param current - Current HP value.
+ * @param max - Maximum HP value.
+ */
 function HealthBar({ current, max }: { current: number; max: number }) {
   const pct = max > 0 ? (current / max) * 100 : 0;
   const color = pct > 50 ? 'bg-green-500' : pct > 25 ? 'bg-yellow-500' : 'bg-red-500';
@@ -46,6 +73,22 @@ function HealthBar({ current, max }: { current: number; max: number }) {
   );
 }
 
+/**
+ * Live game session page (`/game_session`).
+ *
+ * Reads the `?game_id=<id>` query parameter on mount, starts the session via
+ * `POST /session/:game_id`, then opens an SSE connection to
+ * `GET /session/:game_id/stream` to receive real-time turn updates.
+ *
+ * The page renders different views based on the current `status`:
+ * - `"starting"` — spinner while the session is being set up.
+ * - `"running"` — the battle arena with action buttons.
+ * - `"stopped"` — a result screen (victory / defeat / stopped).
+ * - `"error"` — an error panel with a back button.
+ *
+ * The SSE connection and the session are cleaned up when the component
+ * unmounts (e.g. navigating away).
+ */
 export default function Page() {
   const gameIdRef = useRef<string | null>(null);
   const esRef = useRef<EventSource | null>(null);
@@ -59,11 +102,26 @@ export default function Page() {
   const [actionPending, setActionPending] = useState<boolean>(false);
   const messageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  /**
+   * Send a player action to `POST /session/:game_id/action`.
+   *
+   * Sets `actionPending` to disable the action buttons until the turn
+   * resolves and a `TurnResolved` SSE event is received.
+   *
+   * @param action - The action to perform (Attack, Defend, Heal, or None).
+   */
   async function sendAction(action: Action) {
     setActionPending(true);
     await apiClient.post(`/session/${gameIdRef.current}/action`, action);
   }
 
+  /**
+   * Explicitly stop the active game session via `POST /session/:game_id/stop`.
+   *
+   * Closes the SSE connection, marks the session as stopped to prevent the
+   * cleanup handler from sending a duplicate stop request, and sets the UI
+   * status to `"stopped"`.
+   */
   async function stopGame() {
     stoppedRef.current = true;
     esRef.current?.close();

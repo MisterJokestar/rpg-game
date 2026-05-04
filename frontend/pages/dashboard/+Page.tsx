@@ -3,10 +3,25 @@ import { Character } from "../../models/game"
 import { apiClient } from "../../axiosConfig";
 import { navigate } from "vike/client/router";
 
+/**
+ * Dashboard page (`/dashboard`).
+ *
+ * Fetches and displays all characters belonging to the logged-in user. Each
+ * character card is clickable and navigates to the character detail/edit page.
+ * Buttons at the bottom allow creating a new character or viewing the
+ * leaderboard.
+ */
 export default function Page() {
     const [username, setUsername] = useState<String | null>(null);
     const [characters, setCharacters] = useState<Character[]>([]);
 
+    /**
+     * Load the current user's display name and character list.
+     *
+     * Reads `userId` and `username` from `localStorage`, then fetches all
+     * characters via `GET /character/all/:user_id`. On error the characters
+     * list remains empty.
+     */
     async function retrieve_data() {
         let user_id = localStorage.getItem("userId");
         let user_name = localStorage.getItem("username");
@@ -27,11 +42,11 @@ export default function Page() {
         } catch (error) {
             console.log(error);
         }
-        
+
     }
 
     useEffect(() => {
-       retrieve_data(); 
+       retrieve_data();
     }, []);
 
     return (
@@ -40,7 +55,7 @@ export default function Page() {
                 <h1 className="text-4xl font-bold text-center mb-2">Hello {username}!</h1>
                 <ul className="mt-6 space-y-3">
                     {characters.map((c) => (
-                        <li 
+                        <li
                             key={c.id}
                             className="bg-gray-800 rounded-xl p-4 flex flex-col gap-2"
                             onClick={() => {navigate(`/character?character_id=${c.id}`);}}

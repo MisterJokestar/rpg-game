@@ -3,6 +3,17 @@ import { useState, useEffect } from "react";
 import { apiClient } from "../../axiosConfig";
 import { navigate } from "vike/client/router";
 
+/**
+ * Game stats page (`/game_stats`).
+ *
+ * Reads the `?game-id=<id>` query parameter on mount, fetches the game record
+ * via `GET /game/:id` and the associated character via
+ * `GET /character/:character_id`, then displays a full post-game summary
+ * including result, character stats, combat statistics, and enemies defeated.
+ *
+ * A "Continue Game" button is shown when `game.complete` is `false`, allowing
+ * the player to resume an in-progress game.
+ */
 export default function Page() {
 
     const [game, setGame] = useState<Game | null>(null);

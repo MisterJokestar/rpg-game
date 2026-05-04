@@ -218,16 +218,25 @@ impl Combatant for EnemyState {
     }
 }
 
-/// API response shape for a game — always serialises the ID as `"id"`.
+/// API response shape for a game — always serialises the ID as `"id"`
+/// regardless of the active database backend.
 #[derive(Debug, Clone, Serialize)]
 pub struct GameResponse {
+    /// Unique game identifier.
     pub id: String,
+    /// Whether the game has ended.
     pub complete: bool,
+    /// `Some(true)` = player won, `Some(false)` = player lost, `None` = in progress.
     pub win: Option<bool>,
+    /// Current round number.
     pub round: i64,
+    /// Monotonically-increasing turn counter.
     pub turn: i64,
+    /// Snapshot of the player's in-game state.
     pub player_state: PlayerState,
+    /// Snapshot of the current enemy's in-game state.
     pub enemy_state: EnemyState,
+    /// Running tally of enemies defeated, keyed by enemy type.
     pub enemies_defeated: HashMap<EnemyType, i64>,
 }
 
@@ -262,11 +271,18 @@ pub enum GameEvent {
 }
 
 /// Serialisation-safe version of [`GameEvent`] for SSE output.
+///
+/// Mirrors [`GameEvent`] but uses [`GameResponse`] instead of [`Game`] so that
+/// the database-backend ID field is always serialised as `"id"`.
 #[derive(Debug, Clone, Serialize)]
 pub enum GameEventResponse {
+    /// A turn was resolved; contains the updated game state.
     TurnResolved(GameResponse),
+    /// The game ended naturally; contains the final state.
     GameOver(GameResponse),
+    /// The game was stopped externally; contains the state at time of stopping.
     GameStopped(GameResponse),
+    /// A narrative or status message from the game engine.
     GameMessage(String),
 }
 
@@ -294,12 +310,18 @@ pub struct SequencedEvent {
     pub event: GameEvent,
 }
 
+/// An aggregated leaderboard row, computed from all of a player's game records.
 #[derive(Debug, Clone, Serialize)]
 pub struct LeaderboardEntry {
+    /// Display name of the player.
     pub player_name: String,
+    /// Total number of games won.
     pub wins: i64,
+    /// Sum of rounds survived across all games.
     pub rounds: i64,
+    /// Total damage dealt to enemies across all games.
     pub damage_dealt: i64,
+    /// Total number of distinct enemies defeated across all games.
     pub enemies_defeated: i64,
 }
 
@@ -312,8 +334,10 @@ pub struct CreateGameRequest {
     pub character_id: String,
 }
 
+/// Response body returned after a successful `POST /game/new`.
 #[derive(Debug, Clone, Serialize)]
 pub struct CreateGameResponse {
+    /// ID of the newly created game.
     pub game_id: String,
 }
 
@@ -360,6 +384,7 @@ impl Game {
 }
 
 impl LeaderboardEntry {
+    /// Create a zeroed leaderboard entry for the given player name.
     pub fn new(player_name: String) -> Self {
         LeaderboardEntry {
             player_name,

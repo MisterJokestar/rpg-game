@@ -3,12 +3,27 @@ import { navigate } from "vike/client/router";
 import { apiClient } from "../../axiosConfig";
 import { LogInRequest, LogInResponse } from "../../models/api";
 
+/**
+ * Login page (`/login`).
+ *
+ * Renders a sign-in form. On success, stores `userId`, `secret`, and
+ * `username` in `localStorage` and redirects to `/dashboard`.
+ */
 export default function Page() {
     const [username, setUsername] = useState<string>(""); // entered username stored in username
     const [password, setPassword] = useState<string>(""); // entered password stored in password
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
+    /**
+     * Form submit handler.
+     *
+     * Validates that both fields are non-empty, posts to `POST /login`, then
+     * stores the returned credentials in `localStorage` before navigating to
+     * the dashboard.
+     *
+     * @param e - The form submit event.
+     */
     const handleSubmit =  async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault() // prevents the page from refreshing which could lose the data
         if (!username || !password){
@@ -38,11 +53,19 @@ export default function Page() {
         }
     }
 
+    /**
+     * Syncs the username input value into component state.
+     * @param e - The input change event.
+     */
     function handleUsernameChange(e: ChangeEvent<HTMLInputElement>) {
         let new_username = e.target.value;
         setUsername(new_username);
     }
 
+    /**
+     * Syncs the password input value into component state.
+     * @param e - The input change event.
+     */
     function handlePasswordChange(e: ChangeEvent<HTMLInputElement>) {
         let new_password = e.target.value;
         setPassword(new_password);

@@ -3,13 +3,26 @@ import { navigate } from "vike/client/router";
 import { apiClient } from "../../axiosConfig";
 import { CreateUserRequest, LogInResponse } from "../../models/api";
 
+/**
+ * Account creation page (`/create_account`).
+ *
+ * Renders a registration form. On success, stores the returned `userId`,
+ * `secret`, and `username` in `localStorage` and redirects to `/dashboard`.
+ */
 export default function Page() {
     const [username, setUsername] = useState<string>(""); // entered username stored in username
     const [password, setPassword] = useState<string>(""); // entered password stored in password
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    // I think this needs to be async??????????? <- Yes that is correct.
+    /**
+     * Form submit handler.
+     *
+     * Posts to `POST /create_user`, then stores the returned credentials in
+     * `localStorage` before navigating to the dashboard.
+     *
+     * @param e - The form submit event.
+     */
     const handleSubmit =  async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault() // prevents the page from refreshing which could lose the data
         setLoading(true); // prevents the button getting hit twice
@@ -24,7 +37,7 @@ export default function Page() {
                 password: password
             }
             let response = await apiClient.post(
-                '/create_user', // the URL to the cloud function
+                '/create_user',
                 request
             );
             let data: LogInResponse = response.data;
@@ -39,11 +52,19 @@ export default function Page() {
         }
     }
 
+    /**
+     * Syncs the username input value into component state.
+     * @param e - The input change event.
+     */
     function handleUsernameChange(e: ChangeEvent<HTMLInputElement>) {
         let new_username = e.target.value;
         setUsername(new_username);
     }
 
+    /**
+     * Syncs the password input value into component state.
+     * @param e - The input change event.
+     */
     function handlePasswordChange(e: ChangeEvent<HTMLInputElement>) {
         let new_password = e.target.value;
         setPassword(new_password);
@@ -107,4 +128,3 @@ export default function Page() {
         </div>
     );
 }
-
