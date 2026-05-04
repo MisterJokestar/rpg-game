@@ -82,14 +82,3 @@ Events received:
 | *(default)* | `{ GameStopped: Game }` | Game was stopped explicitly |
 | *(default)* | `{ GameMessage: string }` | Narrative message from the game engine |
 | `lag` | number | Client fell behind the broadcast buffer |
-
-## Docker Build
-
-The frontend is built and served as a Node.js SSR app inside Docker:
-
-```bash
-# From the repo root:
-docker compose -f docker-compose.frontend.yml up --build
-```
-
-When running alongside `docker-compose.backend.yml`, the `VITE_SERVER_BASE_URL` is pre-configured to reach the backend via the Docker service name.

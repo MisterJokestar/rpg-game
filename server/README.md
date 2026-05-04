@@ -69,7 +69,7 @@ server/
 - [Rust toolchain](https://rustup.rs/) (stable)
 - A running MongoDB instance — use the database-only compose file:
   ```bash
-  docker compose -f ../docker-compose.db.yml up -d
+  docker-compose up mongo --build -d
   ```
 
 ### 1. Configure environment
@@ -106,11 +106,17 @@ cargo run --features firestore
 
 There is no default feature; you must pass exactly one flag.
 
+### 3. Option A - Run Server and MongoDB in Docker
+
+```bash
+docker-compose up --build -d
+```
+
 ### 3. Option B — MongoDB in Docker, server via cargo
 
 ```bash
 # From the repo root:
-docker compose -f docker-compose.db.yml up -d   # start only MongoDB
+docker-compose up mongo --build -d   # start only MongoDB
 cd server
 cargo run --features mongodb
 ```
