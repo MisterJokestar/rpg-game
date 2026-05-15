@@ -9,10 +9,10 @@
 //!
 //! Authors: Sam Plemmons
 use crate::{
-    enemys::{Enemy, EnemyType},
-    models::{
-        Action,
-        game::{EnemyState, Game, Health}
+    models::{Action, 
+        game::{
+            Game,
+        }
     }
 };
 
@@ -23,7 +23,7 @@ use crate::{
 /// deals `power - ammo` damage (so later shots hit harder). When ammo reaches
 /// 1 the final "super shot" fires at `power * 2`. When ammo hits 0 Maestro
 /// reloads (defends with a negative value) and the cycle resets.
-pub struct MaestroEnemy {
+pub struct Maestro {
     power: i64,
     ammo: i64,
     defense: i64,
@@ -31,30 +31,15 @@ pub struct MaestroEnemy {
     set_message: Option<String>
 }
 
-impl MaestroEnemy {
+impl Maestro {
     /// Create a new MaestroEnemy with default stats.
     pub fn new() -> Self {
-        MaestroEnemy {
+        Maestro {
             power: 8,
             ammo: 6,
             defense: -5,
             speed: 4,
             set_message: None
-        }
-    }
-}
-
-impl Enemy for MaestroEnemy {
-    fn get_new_state(&mut self) -> EnemyState {
-        EnemyState {
-            next_turn: None,
-            state: 0,
-            health: Health {
-                current: 30,
-                max: 30
-            },
-            block: 0,
-            enemy_type: EnemyType::Maestro
         }
     }
 
@@ -69,8 +54,7 @@ impl Enemy for MaestroEnemy {
         }
     }
 
-    fn choose_action(&mut self, state: &mut Game) -> Action {
-        _ = state;
+    fn choose_action(&mut self) -> Action {
         // if they still have ammo, use basic attack
         if self.ammo > 1 {
             self.ammo -= 1; // reduce ammo count
@@ -87,11 +71,6 @@ impl Enemy for MaestroEnemy {
             self.set_message = Some(String::from("Reload!"));
             Action::Defend(self.defense)
         }
-    }
-
-    fn after_players_turn(&mut self, state: &mut Game, prev_action: &Action) {
-        _ = state;
-        _ = prev_action;
     }
 
     fn message(&mut self) -> Option<String> {

@@ -9,10 +9,10 @@
 //!
 //! Authors: Sam Plemmons
 use crate::{
-    enemys::{Enemy, EnemyType},
-    models::{
-        Action,
-        game::{EnemyState, Game, Health}
+    models::{Action, 
+        game::{
+            Game,
+        }
     }
 };
 
@@ -22,41 +22,20 @@ use crate::{
 /// Lotus attacks (+2 per attack below half health). At the end of every
 /// player turn, `burn` HP is dealt to the player. Healing increases `burn`
 /// by 3. Speed is fixed at a turn interval of 6.
-pub struct IronLotusEnemy {
+pub struct IronLotus {
     power: i64,
     burn: i64,
     set_message: Option<String>,
 }
 
-impl IronLotusEnemy {
+impl IronLotus {
     /// Create a new IronLotusEnemy with zero initial burn.
     pub fn new() -> Self {
-        IronLotusEnemy {
+        IronLotus {
             power: 4,
             burn: 0,
             set_message: None
         }
-    }
-}
-
-impl Enemy for IronLotusEnemy {
-    fn get_new_state(&mut self) -> EnemyState {
-        EnemyState {
-            next_turn: None,
-            state: 1,
-            health: Health {
-                current: 40,
-                max: 40
-            },
-            block: 0,
-            enemy_type: EnemyType::IronLotus
-        }
-    }
-
-    fn next_turn(&mut self, state: &mut Game) -> i64 {
-        _ = state;
-        // speed is always 6
-        6
     }
 
     fn choose_action(&mut self, state: &mut Game) -> Action {

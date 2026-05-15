@@ -4,10 +4,10 @@
 //! player attacks, Rose Buddies retaliates with a "Thorns" proc that deals 1
 //! damage back. It speeds up when below half health.
 use crate::{
-    enemys::{Enemy, EnemyType},
-    models::{
-        Action,
-        game::{Combatant, EnemyState, Game, Health}
+    models::{Action, 
+        game::{
+            Game,
+        }
     }
 };
 
@@ -15,36 +15,21 @@ use crate::{
 ///
 /// **Attack pattern:** attacks twice, then heals once (cycle repeats). When
 /// below 20 HP the turn interval decreases, making it act more frequently.
-pub struct RoseBuddiesEnemy {
+pub struct RoseBuddies {
     power: i64,
     defense: i64,
     speed: i64,
     set_message: Option<String>,
 }
 
-impl RoseBuddiesEnemy {
+impl RoseBuddies {
     /// Create a new RoseBuddiesEnemy with default stats.
     pub fn new() -> Self {
-        RoseBuddiesEnemy {
+        RoseBuddies {
             power: 4,
             defense: 2,
             speed: 5,
             set_message: None
-        }
-    }
-}
-
-impl Enemy for RoseBuddiesEnemy {
-    fn get_new_state(&mut self) -> EnemyState {
-        EnemyState {
-            next_turn: None,
-            state: 0,
-            health: Health {
-                current: 40,
-                max: 40
-            },
-            block: 0,
-            enemy_type: EnemyType::RoseBuddies
         }
     }
 
